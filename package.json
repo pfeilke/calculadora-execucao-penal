@@ -1,0 +1,16 @@
+{
+  "name": "calculadora-execucao-penal",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "test": "node --test && node ferramentas/testar-regras.js && node ferramentas/testar-mutantes.js && node --test ferramentas/testar-pagina-regras.js",
+    "testar:navegador": "node ferramentas/testar-calc-navegador.js",
+    "testar-regras": "node --test ferramentas/verificar-regras.test.js && node ferramentas/testar-regras.js",
+    "verificar-regras": "node ferramentas/verificar-regras.js",
+    "gerar-pagina-regras": "node ferramentas/gerar-pagina-regras.js"
+  },
+  "devDependencies": {
+    "marked": "^18.1.2",
+    "playwright": "^1.64.1"
+  }
+}

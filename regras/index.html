@@ -1,0 +1,1378 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="referrer" content="no-referrer">
+  <title>Regras de negócio — Calculadora de Execução Penal</title>
+  <style>
+    :root { color-scheme: light; font-family: system-ui, sans-serif; color: #172c24; background: #f5f7f6; }
+    body { margin: 0; line-height: 1.6; }
+    header, main { max-width: 1200px; margin: auto; padding: 24px; }
+    header { border-bottom: 1px solid #b9cac2; }
+    main { background: white; }
+    a { color: #15583b; text-underline-offset: 3px; }
+    nav { display: flex; flex-wrap: wrap; gap: 12px 24px; margin: 16px 0; }
+    .aviso { padding: 12px; background: #fff3cd; color: #503c00; }
+    .busca { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+    input, button { font: inherit; padding: 8px 12px; border: 1px solid #61786c; border-radius: 4px; }
+    input { flex: 1; min-width: 180px; }
+    button { background: white; cursor: pointer; color: #172c24; }
+    h2, h3 { scroll-margin-top: 16px; }
+    .tabela { overflow-x: auto; margin: 20px 0; }
+    table { width: 100%; border-collapse: collapse; font-size: .95rem; }
+    th, td { border: 1px solid #b9cac2; padding: 10px; text-align: left; vertical-align: top; }
+    th { background: #e7f0eb; }
+    td:first-child { white-space: nowrap; font-weight: 600; }
+    code { overflow-wrap: anywhere; font-size: .9em; }
+    pre { overflow-x: auto; padding: 12px; background: #f5f7f6; }
+    [hidden] { display: none !important; }
+    @media (max-width: 600px) { header, main { padding: 16px; } table { min-width: 680px; } }
+    @media print {
+      nav, .busca, #resultadoBusca, .acoes { display: none; }
+      header, main { max-width: none; padding: 0; }
+      .tabela { overflow: visible; } table { min-width: 0; }
+      tr { break-inside: avoid; } h2, h3 { break-after: avoid; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <a href="../">Calculadora de Execução Penal</a>
+    <h1>Regras de negócio</h1>
+    <p>Última alteração do documento: <time datetime="2026-11-04T17:50:58Z">4 de novembro de 2026 às 14:50 (Brasília)</time>.
+      Versão: <code>54c92abc719c</code>.</p>
+    <p class="aviso"><strong>Este documento não é parecer jurídico.</strong>
+      Premissas e pendências de validação também fazem parte das regras.</p>
+    <nav aria-label="Seções das regras"><a href="#secao-2">PD — Princípio de desempate (decisões jurídicas controvertidas)</a>
+<a href="#secao-3">D — Decisões abertas (resolver antes/durante a Fase 1)</a>
+<a href="#secao-4">Convenções de datas e tempo</a>
+<a href="#secao-5">Unificação e limites</a>
+<a href="#secao-6">Data-base, interrupções e faltas</a>
+<a href="#secao-7">Detração e remição</a>
+<a href="#secao-8">Progressão de regime</a>
+<a href="#secao-10">Livramento condicional</a>
+<a href="#secao-11">Término e saldo</a>
+<a href="#secao-12">Saída temporária (Fase 2)</a>
+<a href="#secao-13">Indulto e comutação (Fase 2)</a>
+<a href="#secao-14">Prescrição (Fase 2)</a>
+<a href="#secao-15">Vigilância (acompanhar; podem mudar regras)</a>
+<a href="#secao-16">Radar da carteira</a>
+<a href="#secao-17">Entradas e validação</a>
+<a href="#secao-18">Importação local de documentos</a>
+<a href="#secao-19">Projeção (antes da condenação) — ver docs/PROJECAO.md</a></nav>
+    <nav class="acoes" aria-label="Documento e histórico">
+      <a href="REGRAS-DE-NEGOCIO.md" download>Baixar documento completo (.md)</a>
+      <a href="https://github.com/DPESP-Labs/calculadora-execucao-penal/blob/54c92abc719cf583fa5bd81339c8df8b47a4fc3d/REGRAS-DE-NEGOCIO.md">Fonte desta versão no GitHub</a>
+      <a href="https://github.com/DPESP-Labs/calculadora-execucao-penal/commits/main/REGRAS-DE-NEGOCIO.md">Histórico de alterações</a>
+      <button type="button" id="imprimir">Imprimir / salvar PDF</button>
+    </nav>
+    <div class="busca">
+      <label for="busca">Buscar por ID ou texto</label>
+      <input type="search" id="busca" placeholder="Ex.: E31, progressão, pendente">
+      <button type="button" id="limpar">Limpar busca</button>
+    </div>
+    <p id="resultadoBusca" role="status" aria-live="polite"></p>
+    <noscript>A busca e o botão de impressão precisam de JavaScript. O documento completo está disponível abaixo.</noscript>
+  </header>
+  <main id="documento"><h1 id="secao-1">Regras de negócio — Calculadora de Execução Penal</h1>
+<p>Registro central dos critérios, no mesmo modelo do cível. <strong>Não é parecer
+jurídico.</strong> IDs são estáveis; nunca renumerar. Status:</p>
+<ul>
+<li><strong>A implementar</strong> — critério decidido, ainda sem código;</li>
+<li><strong>Implementada</strong> — no código e com teste (citar arquivo/função);</li>
+<li><strong>Premissa operacional</strong> — hipótese explicitada ao usuário na tela/PDF;</li>
+<li><strong>Pendente de validação</strong> — depende de decisão jurídica (Núcleo/EP) ou de
+conferência no texto oficial; o código implementa a opção indicada como
+<em>provisória</em> e mostra aviso.</li>
+</ul>
+<p>Toda mudança em <code>engine.js</code>, <code>regras.js</code> ou <code>datas.js</code> exige atualizar a linha
+correspondente aqui no mesmo PR (<code>npm run verificar-regras</code>).</p>
+<hr>
+<h2 id="secao-2">PD — Princípio de desempate (decisões jurídicas controvertidas)</h2>
+<p>Adotado para destravar decisões sem reunião; o Núcleo pode rever qualquer padrão por PR.</p>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Regra</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>PD-01</td>
+<td>Onde houver controvérsia, o <strong>padrão</strong> é a tese mais favorável à defesa <strong>com respaldo em tribunal superior</strong> (STF ou STJ). A tese contrária aparece ao lado, como cenário, com o precedente que a sustenta.</td>
+</tr>
+<tr>
+<td>PD-02</td>
+<td>Precedente <strong>vinculante</strong> (súmula vinculante, repercussão geral, recurso repetitivo, controle concentrado) prevalece sobre PD-01, mesmo quando desfavorável; a tese defensiva vencida aparece só como nota.</td>
+</tr>
+<tr>
+<td>PD-03</td>
+<td>Questão afetada e ainda não julgada (vigilância V01–V06): padrão pelo PD-01 e aviso visível &quot;tema pendente&quot;.</td>
+</tr>
+<tr>
+<td>PD-04</td>
+<td>Questões <strong>de fato</strong> (como o SEEU conta dias: D1–D3) <strong>não</strong> se resolvem pelo PD: decidem os gabaritos (#1).</td>
+</tr>
+</tbody></table>
+<p>Aplicação nesta versão:</p>
+<table>
+<thead>
+<tr>
+<th>Regra</th>
+<th>Padrão (PD)</th>
+<th>Cenário ao lado</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>E23 (base após falta grave anterior a 2020)</td>
+<td>pena remanescente</td>
+<td>pena total (Súm. 534 em sentido amplo)</td>
+</tr>
+<tr>
+<td>E31 (eras)</td>
+<td>menor fração por condenação, sem combinar leis</td>
+<td>— (Tema 1354 é repetitivo: PD-02)</td>
+</tr>
+<tr>
+<td>E33 (hediondo + reincidente genérico)</td>
+<td>40% / 50% (Temas 1084 e 1196)</td>
+<td>60% / 70% enquanto pende o Tema 1319/STF (PD-03)</td>
+</tr>
+<tr>
+<td>E45 (primário com maus antecedentes, LC)</td>
+<td>mais de 1/3</td>
+<td>mais de 1/2</td>
+</tr>
+<tr>
+<td>Era 3b, Título XII reincidente com violência</td>
+<td>20% (III)</td>
+<td>30% (IV)</td>
+</tr>
+<tr>
+<td>D5 (hediondez em indulto)</td>
+<td>data do fato</td>
+<td>data do decreto</td>
+</tr>
+<tr>
+<td>D6 (data-base da progressão seguinte)</td>
+<td>implemento do requisito</td>
+<td>data da decisão</td>
+</tr>
+<tr>
+<td>D7 (Tema 1457: descontinuidade da prisão)</td>
+<td>prisão cautelar</td>
+<td>retorno à pena definitiva</td>
+</tr>
+<tr>
+<td>P02 (condenação depurada como maus antecedentes)</td>
+<td><strong>considera</strong> (Tema 150/STF, PD-02) no desfavorável; <strong>ignora</strong> no favorável (o STF admite afastar condenações muito antigas)</td>
+<td>—</td>
+</tr>
+<tr>
+<td>P11 (1ª fase)</td>
+<td>favorável: o <strong>menor</strong> entre 1/6 do mínimo e 1/8 do intervalo; desfavorável: o maior</td>
+<td>—</td>
+</tr>
+<tr>
+<td>P12 (confissão × reincidência)</td>
+<td>compensação integral (Tema 585/STJ, PD-02)</td>
+<td>preponderância só na multirreincidência, no desfavorável</td>
+</tr>
+<tr>
+<td>P14 (várias majorantes da parte especial)</td>
+<td>favorável: só a maior; desfavorável: cumuladas (fundamentação exigida, Súm. 443/STJ)</td>
+<td>—</td>
+</tr>
+</tbody></table>
+<h2 id="secao-3">D — Decisões abertas (resolver antes/durante a Fase 1)</h2>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Questão</th>
+<th>Opções</th>
+<th>Provisório</th>
+<th>Como decidir</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>D1</td>
+<td>Conversão da pena em dias para aplicar a fração</td>
+<td>(a) 1 ano = 360, 1 mês = 30 (CNJ 2011); (b) 1 ano = 365, 1 mês = 30; (c) dias reais entre o início e o término pelo calendário</td>
+<td><strong>(c)</strong>, configurável</td>
+<td>reproduzir 10+ atestados SEEU reais (ferramentas/casos). Adotar a que bater; registrar a divergência das demais</td>
+</tr>
+<tr>
+<td>D2</td>
+<td>Data do benefício = data-base + dias da fração, com ou sem −1</td>
+<td>com −1 (como término, art. 10 CP) / sem −1 (rapha-v, manual VEC)</td>
+<td><strong>sem −1</strong></td>
+<td>gabaritos SEEU</td>
+</tr>
+<tr>
+<td>D3</td>
+<td>Arredondamento de fração de dia</td>
+<td>para cima / para baixo / manter fração e somar no fim</td>
+<td><strong>para cima</strong> (o requisito só se cumpre no dia completo)</td>
+<td>gabaritos SEEU + Núcleo</td>
+</tr>
+<tr>
+<td>D4</td>
+<td>Várias condenações com frações diferentes</td>
+<td>soma das frações de cada pena (padrão SEEU) / fração única sobre o total</td>
+<td><strong>soma das frações</strong> (E30)</td>
+<td>—</td>
+</tr>
+<tr>
+<td>D5</td>
+<td>Hediondez para indulto/comutação</td>
+<td>data do fato / data do decreto</td>
+<td><strong>data do fato</strong> + cenário (PD-01)</td>
+<td>resolvido pelo PD</td>
+</tr>
+<tr>
+<td>D6</td>
+<td>Data-base da progressão seguinte</td>
+<td>data em que os requisitos foram implementados (STJ) / data da decisão / data da efetiva transferência</td>
+<td><strong>implemento do requisito</strong> (PD-01)</td>
+<td>resolvido pelo PD</td>
+</tr>
+<tr>
+<td>D7</td>
+<td>Tema 1457/STJ (afetado 08/2026): data-base na descontinuidade da prisão</td>
+<td>cautelar / retorno à pena definitiva</td>
+<td><strong>prisão cautelar</strong> + cenário (PD-01/PD-03)</td>
+<td>acompanhar (V04)</td>
+</tr>
+</tbody></table>
+<hr>
+<h2 id="secao-4">Convenções de datas e tempo</h2>
+<p>A integração da importação com a página de execução preserva os critérios deste
+motor sem alterar frações ou datas. A conferência local fica em <code>importar.html</code>;
+publicação e cache offline incluem os dois módulos. Os testes usam Node 22,
+compatível com o PDF.js distribuído localmente (I01).</p>
+<p>O esqueleto da página, do PWA, do tema, da persistência local dos dados de assinatura e da CI não cria nem altera critérios de cálculo. Mudanças em <code>engine.js</code>, <code>regras.js</code> ou <code>datas.js</code> continuam exigindo a atualização da regra correspondente nesta seção. O verificador compara esta seção sem considerar espaços; mudanças nele também devem registrar a ausência de alteração de critério.</p>
+<p>A alteração em <code>engine.js</code> encaminha o objeto global ao factory para a integração da interface; o carregamento de <code>regras.js</code> no CommonJS permanece local. Esse ajuste não altera critérios nem a aritmética do cálculo.</p>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Regra</th>
+<th>Fundamento</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>E01</td>
+<td>Datas em UTC, sem horário; <code>DD/MM/AAAA</code> na tela (<code>DDMMAAAA</code> também aceito), <code>AAAA-MM-DD</code> no JSON. Datas inválidas (31/04, mês 13) são recusadas, nunca &quot;corrigidas&quot;</td>
+<td>— (convenção do cível N02/N03)</td>
+<td>Implementada — <code>datas.js</code> (<code>parseDate</code>, <code>formatDateISO</code>, <code>formatDateBR</code>) e <code>engine.js</code> (<code>dataUTC</code>); <code>ferramentas/testar.js</code>, <code>ferramentas/testar-engine.js</code></td>
+</tr>
+<tr>
+<td>E02</td>
+<td>Pena informada em anos, meses e dias; nenhum campo negativo; meses ≥ 12 e dias ≥ 30 são aceitos mas normalizados só para exibição</td>
+<td>—</td>
+<td>Implementada — <code>datas.js</code> (<code>validateDuration</code>, <code>normalizeDuration</code>, <code>addDuration</code>) e <code>engine.js</code>; <code>ferramentas/testar.js</code>, <code>ferramentas/testar-engine.js</code></td>
+</tr>
+<tr>
+<td>E03</td>
+<td>Término da pena = data de início + pena pelo calendário comum − 1 dia (o dia do começo inclui-se no cômputo). Se o dia não existir no mês de destino, a soma avança para o dia 1º do mês seguinte</td>
+<td>CP art. 10; convenção de aritmética de calendário a conferir nos gabaritos SEEU (issue #1)</td>
+<td>Implementada — <code>datas.js</code> (<code>terminationDate</code>) e <code>engine.js</code>; <code>ferramentas/testar.js</code>, <code>ferramentas/testar-engine.js</code></td>
+</tr>
+<tr>
+<td>E04</td>
+<td>Conversão para dias: ver <strong>D1</strong></td>
+<td>—</td>
+<td>Pendente de validação — opções implementadas em <code>datas.js</code> (<code>penaltyDays</code>); <code>ferramentas/testar.js</code></td>
+</tr>
+<tr>
+<td>E05</td>
+<td>Data do benefício: ver <strong>D2/D3</strong></td>
+<td>—</td>
+<td>Pendente de validação — opções implementadas em <code>datas.js</code> (<code>benefitDate</code>, <code>roundDays</code>); <code>ferramentas/testar.js</code></td>
+</tr>
+<tr>
+<td>E06</td>
+<td>Tudo o que é &quot;tempo cumprido&quot; (detração, remição, pena cumprida) é abatido em dias corridos</td>
+<td>CP art. 42; LEP art. 128</td>
+<td>Implementada — <code>datas.js</code> (<code>differenceDays</code>, <code>differenceYMD</code>); <code>ferramentas/testar.js</code></td>
+</tr>
+</tbody></table>
+<p>A tabela de frações de <code>regras.js</code> aplica E31 considerando a era da data do fato
+e as leis posteriores até a data do cálculo, recebida como parâmetro. A menor
+fração é selecionada com a vedação de livramento da mesma linha, sem combinar
+leis; os fundamentos e as pendências permanecem registrados em E31–E33 e E42.
+As datas são validadas em UTC (E01), com recusa de fatos anteriores ao escopo
+(E91) e de cálculo anterior ao fato (E90). Não há mudança na aritmética de
+<code>datas.js</code> nem nas convenções E02–E06 e D1–D3. Os comandos de <code>package.json</code>
+passam a executar também os testes da tabela e, em <code>npm test</code>, os testes de
+mutação das frações, sem introduzir outro critério de cálculo.</p>
+<p>O cálculo de benefícios em <code>engine.js</code> usa a soma dos requisitos de cada
+condenação, arredondados para cima na progressão (E30/D3), e o dia seguinte à
+fração total no livramento, por exigir &quot;mais de&quot; (E41/E43). A falta grave
+reinicia apenas a data-base da progressão; na fuga, usa-se a recaptura
+(E22–E24). O saldo após falta grave segue a opção provisória de E23, com
+aviso, e a progressão seguinte usa o saldo na data da anterior (E34/D6).
+Detração e remição homologada entram como créditos em dias corridos, abatida
+a perda informada (E06/E26–E29); o livramento observa também os 12 meses sem
+falta grave (E25/E44). Sem recaptura, não se projetam benefícios futuros nem
+término (E21). Não há alteração em <code>datas.js</code> nem nas convenções E01–E05 e
+D1–D3; os testes de <code>test/engine.test.js</code> conferem os benefícios, inclusive
+o exemplo E-EX1 em calendário e na opção de 360 dias.</p>
+<p>O cálculo de prescrição em <code>engine.js</code> acrescenta os critérios provisórios
+E80–E82, detalhados na seção &quot;Prescrição (Fase 2)&quot;: prazo por condenação,
+ajustes por reincidência e idade, pena restante na evasão, termo inicial
+conforme o Tema 788 e prazo da falta grave. Datas de trânsito ausentes não
+são presumidas. A linha do tempo da prescrição é separada da execução, e
+os avisos mantêm explícito o status pendente de validação. Não há alteração
+em <code>datas.js</code>, nas convenções D1–D3 nem nos critérios de progressão,
+livramento e término.</p>
+<h2 id="secao-5">Unificação e limites</h2>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Regra</th>
+<th>Fundamento</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>E10</td>
+<td>Penas de várias condenações são somadas (ou unificadas) para o cálculo</td>
+<td>LEP art. 111</td>
+<td>Implementada (<code>engine.js</code>, <code>calcular</code>; <code>ferramentas/testar-engine.js</code>)</td>
+</tr>
+<tr>
+<td>E11</td>
+<td>Limite de cumprimento: 40 anos para fatos a partir de 23/01/2020; 30 anos para fatos anteriores. O limite <strong>não</strong> é base de benefícios</td>
+<td>CP art. 75 (Lei 13.964/2019); STF Súmula 715</td>
+<td>Implementada (<code>engine.js</code>, apenas no término; <code>ferramentas/testar-engine.js</code>)</td>
+</tr>
+<tr>
+<td>E12</td>
+<td>Nova condenação no curso da execução: soma ao restante; <strong>a data-base não muda</strong> pela unificação</td>
+<td>LEP art. 111, p.u.; STJ Tema 1006</td>
+<td>Implementada (<code>engine.js</code>, preservação da data-base; <code>ferramentas/testar-engine.js</code>)</td>
+</tr>
+<tr>
+<td>E13</td>
+<td>Crime cometido durante o livramento: a pena nova começa no dia seguinte ao fim do período de prova (penas não unificadas não correm juntas)</td>
+<td>STJ Tema 1367 (j. 07/05/2026) — conferir</td>
+<td>Pendente de validação</td>
+</tr>
+</tbody></table>
+<h2 id="secao-6">Data-base, interrupções e faltas</h2>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Regra</th>
+<th>Fundamento</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>E20</td>
+<td>Data-base inicial = data da prisão (início do cumprimento)</td>
+<td>LEP art. 112</td>
+<td>Implementada (<code>engine.js</code>, <code>calcular</code>)</td>
+</tr>
+<tr>
+<td>E21</td>
+<td>Fuga/evasão: o período fora não conta como pena cumprida; a contagem recomeça na recaptura</td>
+<td>CP art. 113 (lógica); STJ (fuga = falta permanente até a recaptura)</td>
+<td>Implementada (<code>engine.js</code>, <code>calcularBeneficios</code>); fuga sem recaptura não projeta benefícios nem término</td>
+</tr>
+<tr>
+<td>E22</td>
+<td>Falta grave interrompe o prazo da <strong>progressão</strong>; nova data-base = data do cometimento (fuga: recaptura)</td>
+<td>STJ Súmula 534; Tema 709</td>
+<td>Implementada (<code>engine.js</code>, <code>calcularBeneficios</code>)</td>
+</tr>
+<tr>
+<td>E23</td>
+<td>Após a interrupção por falta grave, a fração incide sobre a <strong>pena remanescente</strong> (faltas a partir de 23/01/2020); antes disso, a jurisprudência usava a pena total — exibir aviso. Em várias condenações, distribui provisoriamente o saldo na proporção das penas para manter a fração individual</td>
+<td>LEP art. 112, § 6º (Lei 13.964/2019)</td>
+<td>Pendente de validação; opção provisória e aviso em <code>engine.js</code></td>
+</tr>
+<tr>
+<td>E24</td>
+<td>Falta grave <strong>não</strong> interrompe o prazo do livramento condicional nem de indulto/comutação</td>
+<td>STJ Súmulas 441 e 535</td>
+<td>Implementada para LC (<code>engine.js</code>); indulto/comutação são Fase 2</td>
+</tr>
+<tr>
+<td>E25</td>
+<td>Livramento exige não ter cometido falta grave nos últimos 12 meses (fatos a partir de 23/01/2020): a calculadora mostra a data a partir da qual o requisito se cumpre</td>
+<td>CP art. 83, III, &quot;b&quot; (Lei 13.964/2019)</td>
+<td>Implementada (<code>engine.js</code>, <code>calcularBeneficios</code>)</td>
+</tr>
+<tr>
+<td>E26</td>
+<td>Perda de dias remidos por falta grave: até 1/3, informada pelo usuário em dias (a calculadora não decide a fração)</td>
+<td>LEP art. 127</td>
+<td>Implementada (<code>engine.js</code>, <code>calcularBeneficios</code>)</td>
+</tr>
+</tbody></table>
+<h2 id="secao-7">Detração e remição</h2>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Regra</th>
+<th>Fundamento</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>E27</td>
+<td>Detração: períodos de prisão provisória (início e fim, inclusivos) são somados e abatidos da pena; períodos sobrepostos são contados uma vez (avisar)</td>
+<td>CP art. 42</td>
+<td>Implementada (<code>engine.js</code>, união inclusiva; <code>ferramentas/testar-engine.js</code>)</td>
+</tr>
+<tr>
+<td>E27-A</td>
+<td>Recolhimento domiciliar obrigatório noturno e em dias de folga: somar as horas comprovadas, converter cada 24 horas em um dia de detração e desprezar o restante inferior a 24 horas; monitoramento eletrônico não é requisito</td>
+<td>STJ Tema 1155 (REsp 1.977.135/SC)</td>
+<td>Pendente de validação (STF Tema 1454, RE 1.598.180)</td>
+</tr>
+<tr>
+<td>E28</td>
+<td>Remição é pena cumprida: soma ao tempo cumprido para progressão, LC e término. Entrada em dias já declarados/homologados; opcionalmente, calculadora auxiliar: trabalho 3:1; estudo 12 h:1 (em ≥ 3 dias); +1/3 na conclusão de nível de ensino; leitura 4 dias por obra, até 12 obras/ano</td>
+<td>LEP arts. 126–128; Res. CNJ 391/2021</td>
+<td>Implementada para remições informadas em dias (<code>engine.js</code>, <code>calcular</code>; <code>ferramentas/testar-engine.js</code>). Calculadora auxiliar não incluída</td>
+</tr>
+<tr>
+<td>E29</td>
+<td>Cada remição tem flag &quot;homologada&quot; e &quot;data da homologação&quot;; não homologada aparece em cenário separado (&quot;se homologada&quot;)</td>
+<td>—</td>
+<td>Implementada (<code>engine.js</code>, cenário principal e aviso; <code>ferramentas/testar-engine.js</code>)</td>
+</tr>
+<tr>
+<td>E39</td>
+<td>Remição também no cumprimento em regime domiciliar (fatos/períodos a partir de 08/05/2026; para antes, tese de aplicação imediata por ser benéfica — PD-01)</td>
+<td>LEP art. 126, § 9º (Lei 15.402/2026)</td>
+<td>A implementar</td>
+</tr>
+</tbody></table>
+<h2 id="secao-8">Progressão de regime</h2>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Regra</th>
+<th>Fundamento</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>E30</td>
+<td>Várias condenações: requisito = soma, para cada condenação, de (pena × fração aplicável àquela condenação); a data é contada da data-base, descontando detração e remição</td>
+<td>D4</td>
+<td>Implementada (<code>engine.js</code>, <code>calcularBeneficios</code>)</td>
+</tr>
+<tr>
+<td>E31</td>
+<td>A fração é a da lei vigente <strong>na data do fato</strong> de cada condenação; lei posterior mais benéfica retroage; escolher, por condenação, a menor fração entre as leis aplicáveis, <strong>sem combinar partes de leis</strong></td>
+<td>CF art. 5º, XL; STJ Tema 1354 (j. 18/06/2026, repetitivo; PD-02); STF RE 1.531.595 — conferir; PD-01 para a antinomia do Título XII</td>
+<td>Pendente de validação (opção provisória e aviso em <code>regras.js</code>)</td>
+</tr>
+<tr>
+<td>E32</td>
+<td>Natureza é informada por condenação: comum sem violência / com violência ou grave ameaça / hediondo ou equiparado / hediondo com resultado morte / tráfico privilegiado (não hediondo, § 5º) / feminicídio / comando de organização criminosa / milícia. Marcar <code>tituloXII</code> para crimes do Título XII da Parte Especial do CP, inclusive quando também classificados como violentos</td>
+<td>LEP art. 112; Lei 8.072/90; <code>docs/legislacao/LEP.md</code></td>
+<td>Implementada em <code>regras.js</code></td>
+</tr>
+<tr>
+<td>E33</td>
+<td>Reincidência informada por condenação: primário / reincidente genérico / reincidente específico. Hediondo + reincidente genérico = fração do primário (40%; com morte, 50%)</td>
+<td>STJ Temas 1084 e 1196 (este sobrestado pelo Tema 1319/STF — avisar)</td>
+<td>Implementada em <code>regras.js</code>; avisa sobre o Tema 1196</td>
+</tr>
+<tr>
+<td>E34</td>
+<td>2ª progressão (semiaberto → aberto): fração sobre o <strong>saldo</strong> (pena − cumprido até a 1ª progressão), contada da data-base da 1ª (D6)</td>
+<td>STJ (jurisprudência pacífica)</td>
+<td>Implementada (<code>engine.js</code>, <code>calcularBeneficios</code>)</td>
+</tr>
+<tr>
+<td>E35</td>
+<td>Progressão <em>per saltum</em> vedada: a calculadora nunca sugere fechado → aberto</td>
+<td>STJ Súmula 491</td>
+<td>Implementada (<code>engine.js</code>, <code>calcularBeneficios</code>)</td>
+</tr>
+<tr>
+<td>E36</td>
+<td>Exame criminológico: aviso de obrigatoriedade para fatos a partir de 11/04/2024 (Lei 14.843/2024); antes, facultativo e fundamentado. Não altera datas</td>
+<td>LEP art. 112, § 1º; Súm. 439/STJ; SV 26 — Tema 1408/STF pendente</td>
+<td>Premissa operacional</td>
+</tr>
+<tr>
+<td>E37</td>
+<td>Progressão especial da gestante/mãe/responsável por criança ou PcD: 1/8, com requisitos cumulativos informados pelo usuário</td>
+<td>LEP art. 112, §§ 3º–4º (Lei 13.769/2018)</td>
+<td>Fase 2</td>
+</tr>
+<tr>
+<td>E38</td>
+<td>Requisito subjetivo (bom comportamento) não é calculado; aparece como lembrete</td>
+<td>LEP art. 112, § 1º</td>
+<td>Premissa operacional</td>
+</tr>
+</tbody></table>
+<h3 id="secao-9">Tabela de frações por era (regras.js)</h3>
+<p>Cada hipótese vira uma linha em <code>regras.js</code> com <code>{id, era, natureza, reincidencia, fracao, vedaLC, fonte, status}</code>. <code>menorFracao</code> retorna a linha selecionada e avisos; frações são números decimais.
+<strong>Texto conferido em 04/11/2026</strong> no art. 112 consolidado da Câmara dos Deputados
+(transcrição em <a href="https://github.com/DPESP-Labs/calculadora-execucao-penal/blob/54c92abc719cf583fa5bd81339c8df8b47a4fc3d/docs/legislacao/LEP.md"><code>docs/legislacao/LEP.md</code></a>), com as notas de
+redação de cada inciso. Falta só a conferência no DOU/Planalto na revisão humana.</p>
+<p><strong>Era 1 — fatos até 22/01/2020</strong></p>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Hipótese</th>
+<th>Fração</th>
+<th>Fonte</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>E31-ERA1-COMUM</td>
+<td>comum (qualquer)</td>
+<td>1/6</td>
+<td>LEP art. 112 (red. original/Lei 10.792/2003)</td>
+<td>Implementada</td>
+</tr>
+<tr>
+<td>E31-ERA1-HEDIONDO-PRIMARIO</td>
+<td>hediondo/equiparado, fatos de 29/03/2007 a 22/01/2020, primário</td>
+<td>2/5</td>
+<td>Lei 8.072/90, art. 2º, § 2º (Lei 11.464/2007)</td>
+<td>Implementada</td>
+</tr>
+<tr>
+<td>E31-ERA1-HEDIONDO-REINCIDENTE</td>
+<td>hediondo/equiparado, idem, reincidente</td>
+<td>3/5</td>
+<td>idem</td>
+<td>Implementada</td>
+</tr>
+<tr>
+<td>E31-ERA1-HEDIONDO-ANTES-2007</td>
+<td>hediondo, fatos de 26/07/1990 a 28/03/2007</td>
+<td>1/6</td>
+<td>STF HC 82.959; SV 26; STJ Súm. 471</td>
+<td>Implementada</td>
+</tr>
+</tbody></table>
+<p><strong>Era 2 — fatos de 23/01/2020 a 24/03/2026 (Lei 13.964/2019)</strong></p>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Hipótese</th>
+<th>Fração</th>
+<th>Inciso/fonte</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>E31-ERA2-COMUM-PRIMARIO</td>
+<td>primário, sem violência</td>
+<td>16%</td>
+<td>I</td>
+<td>Implementada</td>
+</tr>
+<tr>
+<td>E31-ERA2-COMUM-REINCIDENTE</td>
+<td>reincidente, sem violência</td>
+<td>20%</td>
+<td>II</td>
+<td>Implementada</td>
+</tr>
+<tr>
+<td>E31-ERA2-VIOLENCIA-PRIMARIO</td>
+<td>primário, com violência ou grave ameaça</td>
+<td>25%</td>
+<td>III</td>
+<td>Implementada</td>
+</tr>
+<tr>
+<td>E31-ERA2-VIOLENCIA-REINCIDENTE</td>
+<td>reincidente, com violência ou grave ameaça</td>
+<td>30%</td>
+<td>IV</td>
+<td>Implementada</td>
+</tr>
+<tr>
+<td>E31-ERA2-HEDIONDO-PRIMARIO-GENERICO</td>
+<td>hediondo, primário (ou reincidente genérico — Tema 1084)</td>
+<td>40%</td>
+<td>V</td>
+<td>Implementada</td>
+</tr>
+<tr>
+<td>E31-ERA2-HEDIONDO-MORTE-PRIMARIO-GENERICO</td>
+<td>hediondo com morte, primário (ou reincidente genérico — Tema 1196)</td>
+<td>50%, <strong>veda LC</strong></td>
+<td>VI, a; Lei 13.964/2019; <code>docs/legislacao/LEP.md</code></td>
+<td>Implementada</td>
+</tr>
+<tr>
+<td>E31-ERA2-COMANDO-ORCRIM</td>
+<td>comando de orcrim para hediondo</td>
+<td>50%, <strong>veda LC</strong></td>
+<td>VI, b; Lei 13.964/2019; <code>docs/legislacao/LEP.md</code></td>
+<td>Implementada</td>
+</tr>
+<tr>
+<td>E31-ERA2-MILICIA</td>
+<td>milícia</td>
+<td>50%, não veda LC</td>
+<td>VI, c; Lei 13.964/2019; <code>docs/legislacao/LEP.md</code></td>
+<td>Implementada</td>
+</tr>
+<tr>
+<td>E31-ERA2-FEMINICIDIO-PRIMARIO</td>
+<td>feminicídio, primário (fatos de <strong>10/10/2024 a 24/03/2026</strong>)</td>
+<td>55%, <strong>veda LC</strong></td>
+<td>VI-A (Lei 14.994/2024, DOU 10/10/2024; revogado pela Lei 15.358/2026); <code>docs/legislacao/LEP.md</code></td>
+<td>Implementada</td>
+</tr>
+<tr>
+<td>E31-ERA2-HEDIONDO-ESPECIFICO</td>
+<td>hediondo, reincidente específico</td>
+<td>60%</td>
+<td>VII; Lei 13.964/2019; <code>docs/legislacao/LEP.md</code></td>
+<td>Implementada</td>
+</tr>
+<tr>
+<td>E31-ERA2-HEDIONDO-MORTE-ESPECIFICO</td>
+<td>hediondo com morte, reincidente específico</td>
+<td>70%, <strong>veda LC</strong></td>
+<td>VIII; Lei 13.964/2019; <code>docs/legislacao/LEP.md</code></td>
+<td>Implementada</td>
+</tr>
+</tbody></table>
+<p><strong>Era 3a — fatos de 25/03/2026 a 07/05/2026 (Lei 15.358/2026, DOU 25/03/2026, vigência na publicação)</strong></p>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Hipótese</th>
+<th>Fração</th>
+<th>Fonte</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>E31-ERA3A-COMUM-PRIMARIO</td>
+<td>primário, sem violência</td>
+<td>16%</td>
+<td>I; Lei 13.964/2019; <code>docs/legislacao/LEP.md</code></td>
+<td>Pendente de validação</td>
+</tr>
+<tr>
+<td>E31-ERA3A-COMUM-REINCIDENTE</td>
+<td>reincidente, sem violência</td>
+<td>20%</td>
+<td>II; Lei 13.964/2019; <code>docs/legislacao/LEP.md</code></td>
+<td>Pendente de validação</td>
+</tr>
+<tr>
+<td>E31-ERA3A-VIOLENCIA-PRIMARIO</td>
+<td>primário, com violência ou grave ameaça</td>
+<td>25%</td>
+<td>III; Lei 13.964/2019; <code>docs/legislacao/LEP.md</code></td>
+<td>Pendente de validação</td>
+</tr>
+<tr>
+<td>E31-ERA3A-VIOLENCIA-REINCIDENTE</td>
+<td>reincidente, com violência ou grave ameaça</td>
+<td>30%</td>
+<td>IV; Lei 13.964/2019; <code>docs/legislacao/LEP.md</code></td>
+<td>Pendente de validação</td>
+</tr>
+<tr>
+<td>E31-ERA3A-HEDIONDO-PRIMARIO</td>
+<td>hediondo, primário</td>
+<td>70%</td>
+<td>V; Lei 15.358/2026; <code>docs/legislacao/LEP.md</code></td>
+<td>Pendente de validação</td>
+</tr>
+<tr>
+<td>E31-ERA3A-HEDIONDO-MORTE-PRIMARIO</td>
+<td>hediondo com morte, primário</td>
+<td>75%, <strong>veda LC</strong></td>
+<td>VI, a; Lei 15.358/2026; <code>docs/legislacao/LEP.md</code></td>
+<td>Pendente de validação</td>
+</tr>
+<tr>
+<td>E31-ERA3A-COMANDO-ORCRIM</td>
+<td>comando de orcrim ultraviolenta</td>
+<td>75%, <strong>veda LC</strong></td>
+<td>VI, b; Lei 15.358/2026; <code>docs/legislacao/LEP.md</code></td>
+<td>Pendente de validação</td>
+</tr>
+<tr>
+<td>E31-ERA3A-MILICIA</td>
+<td>milícia</td>
+<td>75%, não veda LC</td>
+<td>VI, c; Lei 15.358/2026; <code>docs/legislacao/LEP.md</code></td>
+<td>Pendente de validação</td>
+</tr>
+<tr>
+<td>E31-ERA3A-FEMINICIDIO-PRIMARIO</td>
+<td>feminicídio, primário</td>
+<td>75%, <strong>veda LC</strong></td>
+<td>VI, d; Lei 15.358/2026; <code>docs/legislacao/LEP.md</code></td>
+<td>Pendente de validação</td>
+</tr>
+<tr>
+<td>E31-ERA3A-HEDIONDO-REINCIDENTE</td>
+<td>hediondo, reincidente</td>
+<td>80%</td>
+<td>VII; Lei 15.358/2026; <code>docs/legislacao/LEP.md</code></td>
+<td>Pendente de validação</td>
+</tr>
+<tr>
+<td>E31-ERA3A-HEDIONDO-MORTE-REINCIDENTE</td>
+<td>hediondo com morte, reincidente</td>
+<td>85%, <strong>veda LC</strong></td>
+<td>VIII; Lei 15.358/2026; <code>docs/legislacao/LEP.md</code></td>
+<td>Pendente de validação</td>
+</tr>
+</tbody></table>
+<p><strong>Era 3b — fatos a partir de 08/05/2026 (Lei 15.402/2026, DOU 08/05/2026 ed. extra B, vigência na publicação; promulgada após rejeição do veto total)</strong></p>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Hipótese</th>
+<th>Fração</th>
+<th>Fonte</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>E31-ERA3B-COMUM-PRIMARIO</td>
+<td>regra geral: primário sem violência</td>
+<td>1/6</td>
+<td>caput; Lei 15.402/2026; <code>docs/legislacao/LEP.md</code></td>
+<td>Pendente de validação</td>
+</tr>
+<tr>
+<td>E31-ERA3B-COMUM-REINCIDENTE</td>
+<td>reincidente em crime não referido nos incisos I e II</td>
+<td>20%</td>
+<td>III; Lei 15.402/2026; <code>docs/legislacao/LEP.md</code></td>
+<td>Pendente de validação</td>
+</tr>
+<tr>
+<td>E31-ERA3B-VIOLENCIA-PRIMARIO</td>
+<td>primário, com violência ou grave ameaça, exceto Título XII</td>
+<td>25%</td>
+<td>I; Lei 15.402/2026; <code>docs/legislacao/LEP.md</code></td>
+<td>Pendente de validação</td>
+</tr>
+<tr>
+<td>E31-ERA3B-VIOLENCIA-REINCIDENTE</td>
+<td>reincidente, com violência ou grave ameaça, exceto Título XII</td>
+<td>30%</td>
+<td>II; Lei 15.402/2026; <code>docs/legislacao/LEP.md</code></td>
+<td>Pendente de validação</td>
+</tr>
+<tr>
+<td>E31-ERA3B-TITULO-XII-PRIMARIO</td>
+<td>crime do Título XII, primário</td>
+<td>1/6</td>
+<td>caput; Lei 15.402/2026; <code>docs/legislacao/LEP.md</code></td>
+<td>Pendente de validação</td>
+</tr>
+<tr>
+<td>E31-ERA3B-TITULO-XII-REINCIDENTE</td>
+<td>crime do Título XII, reincidente</td>
+<td>20% (padrão); 30% como cenário</td>
+<td>III; inciso IV mantido pela Lei 13.964/2019; PD-01; <code>docs/legislacao/LEP.md</code></td>
+<td>Pendente de validação</td>
+</tr>
+<tr>
+<td>E31-ERA3B-HEDIONDO-PRIMARIO</td>
+<td>hediondo, primário</td>
+<td>70%</td>
+<td>V; Lei 15.358/2026; <code>docs/legislacao/LEP.md</code></td>
+<td>Pendente de validação</td>
+</tr>
+<tr>
+<td>E31-ERA3B-HEDIONDO-MORTE-PRIMARIO</td>
+<td>hediondo com morte, primário</td>
+<td>75%, <strong>veda LC</strong></td>
+<td>VI, a; Lei 15.358/2026; <code>docs/legislacao/LEP.md</code></td>
+<td>Pendente de validação</td>
+</tr>
+<tr>
+<td>E31-ERA3B-COMANDO-ORCRIM</td>
+<td>comando de orcrim ultraviolenta</td>
+<td>75%, <strong>veda LC</strong></td>
+<td>VI, b; Lei 15.358/2026; <code>docs/legislacao/LEP.md</code></td>
+<td>Pendente de validação</td>
+</tr>
+<tr>
+<td>E31-ERA3B-MILICIA</td>
+<td>milícia</td>
+<td>75%, não veda LC</td>
+<td>VI, c; Lei 15.358/2026; <code>docs/legislacao/LEP.md</code></td>
+<td>Pendente de validação</td>
+</tr>
+<tr>
+<td>E31-ERA3B-FEMINICIDIO-PRIMARIO</td>
+<td>feminicídio, primário</td>
+<td>75%, <strong>veda LC</strong></td>
+<td>VI, d; Lei 15.358/2026; <code>docs/legislacao/LEP.md</code></td>
+<td>Pendente de validação</td>
+</tr>
+<tr>
+<td>E31-ERA3B-HEDIONDO-REINCIDENTE</td>
+<td>hediondo, reincidente</td>
+<td>80%</td>
+<td>VII; Lei 15.358/2026; <code>docs/legislacao/LEP.md</code></td>
+<td>Pendente de validação</td>
+</tr>
+<tr>
+<td>E31-ERA3B-HEDIONDO-MORTE-REINCIDENTE</td>
+<td>hediondo com morte, reincidente</td>
+<td>85%, <strong>veda LC</strong></td>
+<td>VIII; Lei 15.358/2026; <code>docs/legislacao/LEP.md</code></td>
+<td>Pendente de validação</td>
+</tr>
+</tbody></table>
+<p>Consequências que o motor precisa tratar (E31):</p>
+<ul>
+<li><strong>1/6 é mais gravoso que 16%</strong> para o primário sem violência: para fatos até
+07/05/2026 vale 16% (irretroatividade); a partir de 08/05/2026, 1/6.</li>
+<li><strong>Título XII</strong> (arts. 359-I e seguintes do CP): com violência, primário → 1/6;
+reincidente → 20% (III) — e, por ser mais benéfica, a regra <strong>retroage</strong> a fatos
+anteriores (comparar com 25%/30% da Era 2 pelo Tema 1354). O inciso IV (30%) não tem
+a ressalva do Título XII: há antinomia para o reincidente; pelo princípio PD, padrão
+= 20%, com o cenário de 30% ao lado (ver PD-01).</li>
+<li>Frações das Eras 3a e 3b para hediondos são <strong>gravosas</strong>: só fatos posteriores.</li>
+<li>ADIs 7966 e 7967 contra a Lei 15.402 (V01).</li>
+</ul>
+<h2 id="secao-10">Livramento condicional</h2>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Regra</th>
+<th>Fundamento</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>E40</td>
+<td>Pena (somada, art. 84) igual ou superior a 2 anos; abaixo disso, &quot;não cabe LC&quot;</td>
+<td>CP arts. 83 e 84</td>
+<td>Implementada (<code>engine.js</code>, <code>calcularBeneficios</code>)</td>
+</tr>
+<tr>
+<td>E41</td>
+<td>Frações: mais de 1/3 (primário com bons antecedentes); mais de 1/2 (reincidente em crime doloso); mais de 2/3 (hediondo/equiparado, tráfico, tortura, terrorismo, tráfico de pessoas), vedado ao reincidente específico nesses crimes. &quot;Mais de&quot; = dia seguinte ao implemento da fração</td>
+<td>CP art. 83, I, II e V</td>
+<td>Implementada (<code>regras.js</code>, <code>fracaoLC</code>; <code>engine.js</code>, <code>calcularBeneficios</code>)</td>
+</tr>
+<tr>
+<td>E42</td>
+<td>Vedações expressas por natureza/era (ver tabela: crime hediondo com resultado morte; comando de organização criminosa ultraviolenta; feminicídio primário; milícia não tem vedação expressa no art. 112)</td>
+<td>LEP art. 112, VI, alíneas a, b e d, VIII; Leis 13.964/2019 e 15.358/2026; <code>docs/legislacao/LEP.md</code></td>
+<td>Pendente de validação (opção provisória e aviso em <code>regras.js</code>)</td>
+</tr>
+<tr>
+<td>E43</td>
+<td>Várias condenações: soma das frações de cada pena, como E30</td>
+<td>CP art. 84</td>
+<td>Implementada (<code>engine.js</code>, <code>calcularBeneficios</code>)</td>
+</tr>
+<tr>
+<td>E44</td>
+<td>Requisito de 12 meses sem falta grave: ver E25</td>
+<td>—</td>
+<td>Implementada (<code>engine.js</code>, <code>calcularBeneficios</code>)</td>
+</tr>
+<tr>
+<td>E45</td>
+<td>Antecedentes: campo &quot;bons antecedentes&quot; (para 1/3) separado de reincidência; primário com maus antecedentes — avisar divergência jurisprudencial (há corrente pela fração intermediária)</td>
+<td>CP art. 83, I e II</td>
+<td>Pendente de validação (aviso em <code>regras.js</code>)</td>
+</tr>
+</tbody></table>
+<h2 id="secao-11">Término e saldo</h2>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Regra</th>
+<th>Fundamento</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>E50</td>
+<td>Término = data-base do cumprimento + (pena total − detração − remição + dias de interrupção), pelo calendário (E03)</td>
+<td>CP arts. 10 e 42; LEP art. 128</td>
+<td>Implementada (<code>engine.js</code>, <code>calcular</code>; <code>ferramentas/testar-engine.js</code>)</td>
+</tr>
+<tr>
+<td>E51</td>
+<td>Pena cumprida e restante na data do cálculo, em anos/meses/dias e em dias</td>
+<td>—</td>
+<td>Implementada (<code>engine.js</code>, <code>calcular</code>; <code>ferramentas/testar-engine.js</code>)</td>
+</tr>
+</tbody></table>
+<h2 id="secao-12">Saída temporária (Fase 2)</h2>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Regra</th>
+<th>Fundamento</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>E60</td>
+<td>Só no semiaberto; só para estudo (curso supletivo, 2º grau ou superior) após a Lei 14.843/2024; vedada para hediondo e para crime com violência ou grave ameaça</td>
+<td>LEP arts. 122–123 (Lei 14.843/2024)</td>
+<td>Pendente de validação</td>
+</tr>
+<tr>
+<td>E61</td>
+<td>Requisito objetivo: 1/6 (primário) ou 1/4 (reincidente) da pena</td>
+<td>LEP art. 123, II</td>
+<td>A implementar</td>
+</tr>
+</tbody></table>
+<h2 id="secao-13">Indulto e comutação (Fase 2)</h2>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Regra</th>
+<th>Fundamento</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>E70</td>
+<td>Decretos como dados (<code>decretos/AAAA.json</code>), cada requisito com artigo; requisitos temporais aferidos em 25/12 do respectivo ano; permitir simular decreto anterior</td>
+<td>Decretos 12.338/2024, arts. 5º–14, e 12.790/2025, arts. 5º–14</td>
+<td>A implementar</td>
+</tr>
+<tr>
+<td>E71</td>
+<td>Falta grave cometida nos 12 meses anteriores à data de referência impede o benefício quando houver sanção reconhecida; apuração posterior não afasta o impedimento se não houve inércia ou mora estatal para instaurar o procedimento. Considerar a data do fato, não a data do reconhecimento; fato após a publicação não impede</td>
+<td>Decreto 12.338/2024, art. 6º; Decreto 12.790/2025, art. 6º; STJ Tema 1195, EDcl no REsp 2.011.706-MG (tese retificada)</td>
+<td>Pendente de validação</td>
+</tr>
+</tbody></table>
+<h2 id="secao-14">Prescrição (Fase 2)</h2>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Regra</th>
+<th>Fundamento</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>E80</td>
+<td>Prescrição executória por condenação: prazo do art. 109 pela pena aplicada; +1/3 se reincidente; metade se menor de 21 no fato ou maior de 70 na sentença; na evasão, pela pena restante</td>
+<td>CP arts. 109, 110, 113 e 115</td>
+<td>Pendente de validação; opção provisória e aviso em <code>engine.js</code></td>
+</tr>
+<tr>
+<td>E81</td>
+<td>Termo inicial: trânsito para a acusação até 11/11/2020; depois, trânsito para ambas as partes. Sem as datas necessárias, não presumir o termo</td>
+<td>STF Tema 788 (modulação)</td>
+<td>Pendente de validação; opção provisória e aviso em <code>engine.js</code></td>
+</tr>
+<tr>
+<td>E82</td>
+<td>Prescrição da falta grave: 2 anos para fatos anteriores a 06/05/2010; 3 anos desde essa data, contados do cometimento</td>
+<td>STJ (aplicação analógica do art. 109, VI; Lei 12.234/2010)</td>
+<td>Pendente de validação; opção provisória e aviso em <code>engine.js</code></td>
+</tr>
+</tbody></table>
+<h2 id="secao-15">Vigilância (acompanhar; podem mudar regras)</h2>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Objeto</th>
+<th>Afeta</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>V01</td>
+<td>ADIs 7966 e 7967 (Lei 15.402/2026)</td>
+<td>Era 3b</td>
+</tr>
+<tr>
+<td>V02</td>
+<td>Tema 1319/STF (sobrestamento do Tema 1196/STJ)</td>
+<td>E33</td>
+</tr>
+<tr>
+<td>V03</td>
+<td>Tema 1408/STF — exame criminológico × irretroatividade</td>
+<td>E36</td>
+</tr>
+<tr>
+<td>V04</td>
+<td>Tema 1457/STJ — data-base na descontinuidade da prisão</td>
+<td>D7</td>
+</tr>
+<tr>
+<td>V05</td>
+<td>Tema 1454/STF — detração de cautelar diversa da prisão</td>
+<td>E27-A</td>
+</tr>
+<tr>
+<td>V06</td>
+<td>Novo decreto de indulto natalino (dez/2026)</td>
+<td>E70</td>
+</tr>
+</tbody></table>
+<h2 id="secao-16">Radar da carteira</h2>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Regra</th>
+<th>Fundamento</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>E94</td>
+<td>O radar considera as datas de progressão e livramento dos arquivos <code>.calcpen</code> salvos; ordena pela data mais próxima. Data passada sem pedido marcado pelo usuário aparece como &quot;vencido sem pedido&quot;; a carteira não presume protocolo. O requisito de 12 meses sem falta usa E25.</td>
+<td>Convenção operacional D-D em <code>docs/DIFERENCIAIS.md</code></td>
+<td>Premissa operacional</td>
+</tr>
+</tbody></table>
+<h2 id="secao-17">Entradas e validação</h2>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Regra</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>E90</td>
+<td>Ao menos uma condenação; data do fato ≤ data de início ≤ data do cálculo (avisar, não bloquear, se início &lt; fato por erro de digitação comum)</td>
+<td>Implementada (<code>engine.js</code>, validação; <code>ferramentas/testar-engine.js</code>)</td>
+</tr>
+<tr>
+<td>E91</td>
+<td>Fatos anteriores a 26/07/1990: bloquear com mensagem (&quot;fora do escopo&quot;)</td>
+<td>Implementada (<code>engine.js</code>, validação; <code>ferramentas/testar-engine.js</code>)</td>
+</tr>
+<tr>
+<td>E92</td>
+<td>Natureza incompatível com a era (ex.: feminicídio autônomo antes de 09/10/2024; furto com explosivo como hediondo antes de 23/01/2020) → aviso com a regra</td>
+<td>Implementada (<code>engine.js</code>, avisos de incompatibilidade; <code>ferramentas/testar-engine.js</code>)</td>
+</tr>
+<tr>
+<td>E93</td>
+<td>Todo campo importado do Copilot guarda <code>origem</code>; resultado fica &quot;a conferir&quot; até &quot;Concluí a revisão&quot;</td>
+<td>Implementada (<code>engine.js</code> e <code>copilot.js</code>; testes em <code>ferramentas/testar-engine.js</code> e <code>ferramentas/testar-copilot.test.js</code>; formato: <code>ESPECIFICACAO-MOTOR.md</code> § 5)</td>
+</tr>
+</tbody></table>
+<hr>
+<h2 id="secao-18">Importação local de documentos</h2>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Convenção</th>
+<th>Fundamento</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>I01</td>
+<td>PDF do SEEU/SAJ é lido localmente pelo PDF.js em <code>vendor/</code>; o texto da tela usa o mesmo leitor tolerante a acentos, espaços e quebras. Cada campo conserva a fonte <code>PDF, página N</code> ou <code>Texto colado da tela</code>, inclusive quando a condenação continua em outra página. Campos acrescentados ou alterados na conferência recebem fonte manual, sem apagar as fontes dos demais. Os três canais usam a conferência E93, sempre inicialmente <strong>a conferir</strong>.</td>
+<td>Issue #13 ([11]); <code>docs/DIFERENCIAIS.md</code>, §3; E93</td>
+<td>Implementada — <code>importacao.js</code>, <code>copilot.js</code>, <code>ui-importacao.js</code>; testes I01 em <code>ferramentas/importacao.test.js</code>, <code>ferramentas/conferencia.test.js</code> e <code>ferramentas/testar-copilot.test.js</code></td>
+</tr>
+<tr>
+<td>I02</td>
+<td>Extração conservadora: só rótulos explícitos; dados ausentes, inválidos, contraditórios ou não reconhecidos geram pendências, nunca classificação jurídica presumida. Pena total não substitui condenações; anos/meses não são convertidos em dias; totais de remição/detração não viram decisões ou períodos. Listas vazias exigem conferência. Não guardar PDF nem texto bruto; apenas campos previstos. PDF sem texto, protegido ou inválido exige nova exportação ou extração pelo Copilot. Limites operacionais: 20 MB, 200 páginas e 2 milhões de caracteres por PDF; 2 milhões por texto colado.</td>
+<td><code>agente-copilot-execucao.txt</code>, itens 5–7 e regras dos campos; D1 ainda pendente; privacidade e limites de recursos do navegador</td>
+<td>Implementada — <code>importacao.js</code>; testes I02 em <code>ferramentas/importacao.test.js</code></td>
+</tr>
+<tr>
+<td>I03</td>
+<td>Lote gera um rascunho independente por PDF no radar local, inclusive com pendências; erro de um arquivo não interrompe os demais. Armazenamento indisponível ou cheio gera aviso e opção de salvar em arquivo; nenhum descarte silencioso. Conferência e conclusão da revisão são individuais. O radar de importações não calcula nem ordena benefícios sem o motor.</td>
+<td>Issue #13 ([11]); diferencial D-D; E93</td>
+<td>Implementada — <code>radar-importacoes.js</code>, <code>ui-importacao.js</code>; testes I03 em <code>ferramentas/importacao.test.js</code> e <code>ferramentas/radar-importacoes.test.js</code></td>
+</tr>
+</tbody></table>
+<h2 id="secao-19">Projeção (antes da condenação) — ver docs/PROJECAO.md</h2>
+<p>Módulo de estimativa. Todos os resultados levam o aviso &quot;projeção; a pena depende do
+juiz e das provas&quot;. Status inicial de todas as linhas: <strong>A implementar</strong>, salvo indicação.</p>
+<h3 id="secao-20">Antecedentes</h3>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Regra</th>
+<th>Fundamento</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>P01</td>
+<td>Reincidente = novo crime cometido depois do trânsito em julgado de condenação anterior, e até cinco anos do cumprimento ou extinção da pena (período depurador, computado o período de prova do sursis/LC não revogados); só após cinco anos completos a condenação fica depurada</td>
+<td>CP arts. 63 e 64, I</td>
+<td>Implementada em <code>antecedentes.js</code>; teste P01 em <code>test/antecedentes.test.js</code></td>
+</tr>
+<tr>
+<td>P02</td>
+<td>Condenação definitiva que não gera reincidência (fato posterior ao novo crime, trânsito posterior ou depurada) pode ser <strong>maus antecedentes</strong>; a calculadora aponta e avisa da tese do direito ao esquecimento</td>
+<td>STF Tema 150 (RE 593.818); STJ</td>
+<td>Padrão pelo PD: considerada no cenário desfavorável e ignorada no favorável (<code>antecedentes.js</code>)</td>
+</tr>
+<tr>
+<td>P03</td>
+<td>Inquéritos e ações penais em curso não são maus antecedentes nem reincidência</td>
+<td>STJ Súmula 444</td>
+<td>Implementada em <code>antecedentes.js</code>; teste P03 em <code>test/antecedentes.test.js</code></td>
+</tr>
+<tr>
+<td>P04</td>
+<td>Crimes militares próprios e políticos não geram reincidência</td>
+<td>CP art. 64, II</td>
+<td>Implementada em <code>antecedentes.js</code>; teste P04 em <code>test/antecedentes.test.js</code></td>
+</tr>
+<tr>
+<td>P05</td>
+<td>Reincidência específica: mesma natureza (para hediondos, anterior hediondo ou equiparado) — usada para progressão/LC</td>
+<td>LEP art. 112; CP art. 83, V</td>
+<td>Implementada em <code>antecedentes.js</code>; teste P05 em <code>test/antecedentes.test.js</code></td>
+</tr>
+</tbody></table>
+<h3 id="secao-21">Dosimetria (art. 68 do CP)</h3>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Regra</th>
+<th>Fundamento</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>P10</td>
+<td>Pena em abstrato da lei vigente na data do fato; lei posterior mais benéfica retroage. Penas e vigências em <code>docs/legislacao/catalogo-tipos-conferido.json</code> (mudanças de 2024–2026 conferidas: Leis 14.994/2024, 15.280/2025, 15.358/2026, 15.397/2026)</td>
+<td>CF art. 5º, XL; CP art. 2º</td>
+<td>A implementar</td>
+</tr>
+<tr>
+<td>P11</td>
+<td>1ª fase: cada circunstância judicial desfavorável aumenta a pena-base por um critério escolhido: 1/6 da pena mínima (padrão) ou 1/8 do intervalo entre mínima e máxima; mostrar o outro critério em nota</td>
+<td>CP art. 59; jurisprudência do STJ (critérios aceitos, sem vinculação)</td>
+<td>Padrão pelo PD (ver seção PD)</td>
+</tr>
+<tr>
+<td>P12</td>
+<td>2ª fase: agravante de reincidência e atenuantes (menoridade relativa, maior de 70, confissão) em 1/6 cada; a atenuante de idade <strong>não</strong> se aplica se o crime envolver violência sexual contra a mulher (art. 65, I, red. Lei 15.160/2025 — fatos posteriores); confissão compensa a reincidência; multirreincidência pode preponderar</td>
+<td>CP arts. 61, 65, 67; STJ Tema 585</td>
+<td>Padrão pelo PD (ver seção PD)</td>
+</tr>
+<tr>
+<td>P13</td>
+<td>Atenuantes não levam a pena abaixo do mínimo nem agravantes acima do máximo na 2ª fase</td>
+<td>STJ Súmula 231</td>
+<td>A implementar</td>
+</tr>
+<tr>
+<td>P14</td>
+<td>3ª fase: majorantes e minorantes do catálogo, em cascata; com várias majorantes da parte especial, aplicar uma (a maior) e avisar da possibilidade de cumulação fundamentada</td>
+<td>CP art. 68, p.u.</td>
+<td>Padrão pelo PD (ver seção PD)</td>
+</tr>
+<tr>
+<td>P15</td>
+<td>Tentativa: redução de 1/3 (cenário desfavorável) a 2/3 (favorável)</td>
+<td>CP art. 14, p.u.</td>
+<td>A implementar</td>
+</tr>
+<tr>
+<td>P16</td>
+<td>Tráfico privilegiado: redução de 1/6 a 2/3 se primário, de bons antecedentes, sem dedicação a atividade criminosa nem integração a organização; não hediondo</td>
+<td>Lei 11.343, art. 33, § 4º; LEP art. 112, § 5º</td>
+<td>A implementar</td>
+</tr>
+<tr>
+<td>P17</td>
+<td>Concurso material: soma; formal próprio: maior pena + 1/6 a 1/2; continuidade: + 1/6 a 2/3 (cenários pela fração); cúmulo material benéfico</td>
+<td>CP arts. 69, 70, 71</td>
+<td>A implementar</td>
+</tr>
+</tbody></table>
+<h3 id="secao-22">Regime inicial, substituição e sursis</h3>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Regra</th>
+<th>Fundamento</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>P20</td>
+<td>Regime inicial pela pena final: &gt; 8 anos fechado; &gt; 4 e ≤ 8 semiaberto; ≤ 4 aberto (não reincidente); reclusão; detenção nunca começa no fechado</td>
+<td>CP art. 33, §§ 2º e 3º</td>
+<td>A implementar</td>
+</tr>
+<tr>
+<td>P21</td>
+<td>Reincidente com pena ≤ 4 anos e circunstâncias judiciais favoráveis: semiaberto</td>
+<td>STJ Súmula 269</td>
+<td>A implementar</td>
+</tr>
+<tr>
+<td>P22</td>
+<td>Gravidade abstrata não justifica regime mais gravoso; hediondo não impõe fechado</td>
+<td>STJ Súm. 440; STF Súm. 718 e 719; STF HC 111.840</td>
+<td>A implementar</td>
+</tr>
+<tr>
+<td>P23</td>
+<td>Detração para fixar o regime: tempo de prisão provisória abatido antes de aplicar P20</td>
+<td>CPP art. 387, § 2º</td>
+<td>A implementar</td>
+</tr>
+<tr>
+<td>P24</td>
+<td>Substituição por restritivas: pena ≤ 4 anos, sem violência ou grave ameaça (culposos: qualquer pena), não reincidente em doloso (salvo § 3º), circunstâncias favoráveis; vedada em violência doméstica contra a mulher com violência/ameaça</td>
+<td>CP art. 44; STJ Súm. 588</td>
+<td>A implementar</td>
+</tr>
+<tr>
+<td>P25</td>
+<td>Sursis: pena ≤ 2 anos (≤ 4 se &gt; 70 anos ou por saúde), não reincidente em doloso, PRD incabível</td>
+<td>CP art. 77</td>
+<td>A implementar</td>
+</tr>
+</tbody></table>
+<h3 id="secao-23">Antes da sentença (custódia)</h3>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Regra</th>
+<th>Fundamento</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>P30</td>
+<td>Preventiva só se: crime doloso com pena máxima &gt; 4 anos (I); condenação anterior por crime doloso transitada, não depurada (II); violência doméstica contra mulher, criança, adolescente, idoso, enfermo ou PcD para garantir medida protetiva (III); integrante de orcrim ultraviolenta, grupo paramilitar ou milícia no contexto da Lei 15.358 (V, desde 25/03/2026); crimes contra a dignidade sexual de criança ou adolescente e arts. 240–241-D e 244-A do ECA (VI, Lei 15.487/2026 — conferir vigência); ou dúvida de identidade (§ 1º). Nunca como antecipação de pena (§ 2º)</td>
+<td>CPP art. 313 (texto conferido, docs/legislacao)</td>
+<td>A implementar</td>
+</tr>
+<tr>
+<td>P31</td>
+<td>Homogeneidade: se o cenário desfavorável projeta regime aberto, PRD ou sursis, gerar argumento de desproporcionalidade da prisão cautelar</td>
+<td>CPP art. 282; jurisprudência STJ</td>
+<td>Premissa operacional</td>
+</tr>
+<tr>
+<td>P32</td>
+<td>ANPP: sem violência ou grave ameaça, pena mínima &lt; 4 anos (com majorantes e minorantes na fração que mais favorece), não reincidente (salvo insignificantes), sem ANPP/transação/sursis processual nos 5 anos anteriores, não cabe em violência doméstica; exige confissão formal (só na visão do defensor) ; para a pena mínima, contam as causas de aumento e diminuição do caso (§ 1º)</td>
+<td>CPP art. 28-A (texto conferido)</td>
+<td>A implementar</td>
+</tr>
+<tr>
+<td>P33</td>
+<td>Transação penal: infração de menor potencial (pena máxima ≤ 2 anos), sem transação nos 5 anos anteriores; não cabe na violência doméstica</td>
+<td>Lei 9.099, arts. 61 e 76; Lei 11.340, art. 41; STJ Súm. 536</td>
+<td>A implementar</td>
+</tr>
+<tr>
+<td>P34</td>
+<td>Suspensão condicional do processo: pena mínima ≤ 1 ano (com o aumento do concurso), sem outro processo nem condenação por crime; não cabe na violência doméstica</td>
+<td>Lei 9.099, art. 89; STJ Súm. 243; STF Súm. 723; STJ Súm. 536</td>
+<td>A implementar</td>
+</tr>
+</tbody></table>
+<h3 id="secao-24">Projeção da execução</h3>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Regra</th>
+<th>Fundamento</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>P40</td>
+<td>Cada cenário vira uma condenação &quot;virtual&quot; com data do fato, natureza, reincidência e data de início = prisão (ou &quot;data hipotética da prisão&quot; informada) e passa pelo mesmo motor da execução (E-regras)</td>
+<td>—</td>
+<td>A implementar</td>
+</tr>
+<tr>
+<td>P41</td>
+<td>&quot;Tempo estimado em regime fechado&quot; = data da 1ª progressão − início, só para regime inicial fechado</td>
+<td>—</td>
+<td>Premissa operacional</td>
+</tr>
+</tbody></table>
+</main>
+  <script>
+    'use strict';
+    const busca = document.getElementById('busca');
+    const status = document.getElementById('resultadoBusca');
+    const normalizar = (texto) => texto.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+    const linhas = [...document.querySelectorAll('tbody tr')];
+    document.querySelectorAll('table').forEach((tabela, indice) => {
+      const wrapper = document.createElement('div');
+      wrapper.className = 'tabela';
+      wrapper.tabIndex = 0;
+      wrapper.setAttribute('role', 'region');
+      wrapper.setAttribute('aria-label', 'Tabela de regras ' + (indice + 1));
+      tabela.before(wrapper);
+      wrapper.append(tabela);
+    });
+    function filtrar() {
+      const termo = normalizar(busca.value.trim());
+      let total = 0;
+      linhas.forEach((linha) => {
+        linha.hidden = !normalizar(linha.textContent).includes(termo);
+        if (!linha.hidden) total++;
+      });
+      status.textContent = termo ? total + ' regras encontradas.'
+        : total + ' regras disponíveis.';
+    }
+    busca.addEventListener('input', filtrar);
+    document.getElementById('limpar').addEventListener('click', () => {
+      busca.value = '';
+      filtrar();
+      busca.focus();
+    });
+    document.getElementById('imprimir').addEventListener('click', () => window.print());
+    window.addEventListener('beforeprint', () => linhas.forEach((linha) => { linha.hidden = false; }));
+    window.addEventListener('afterprint', filtrar);
+    filtrar();
+  </script>
+</body>
+</html>

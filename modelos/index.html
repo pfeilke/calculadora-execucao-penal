@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Gere uma folha simples para o assistido ou uma minuta editável, sem enviar dados para a internet.">
+  <link rel="icon" href="data:,">
+  <title>Folha para o assistido e modelos editáveis</title>
+  <style>
+    :root { color-scheme: light; font-family: Arial, sans-serif; color: #222; background: #fff; }
+    body { max-width: 52rem; margin: 0 auto; padding: 1.25rem; line-height: 1.5; }
+    h1 { font-size: 1.6rem; }
+    label { display: block; margin: 1rem 0 .35rem; font-weight: 700; }
+    input, select, textarea, button { box-sizing: border-box; font: inherit; }
+    input[type="file"], select, textarea { width: 100%; }
+    textarea { min-height: 18rem; padding: .75rem; }
+    button { margin: .6rem .4rem .2rem 0; padding: .55rem .8rem; cursor: pointer; }
+    .aviso { padding: .75rem; border-left: 4px solid #4c9a2a; background: #f3f8f0; }
+    .erro { color: #a00000; }
+    @media print {
+      body { max-width: none; padding: 0; }
+      body > :not(#resultado):not(h1) { display: none !important; }
+      h1 { display: none; }
+      #resultado { border: 0; min-height: 0; }
+    }
+  </style>
+</head>
+<body>
+  <h1>Folha para o assistido e modelos editáveis</h1>
+  <p class="aviso">Os arquivos escolhidos e os textos são processados somente neste aparelho. A folha para o assistido não inclui nome, processo ou outros dados de identificação. Confira toda minuta antes de usar.</p>
+
+  <label for="arquivo">Abrir cálculo salvo (.calcpen)</label>
+  <input id="arquivo" type="file" accept=".calcpen,.json,application/json">
+
+  <label for="modelo">Documento</label>
+  <select id="modelo">
+    <option value="folha-assistido.md">Folha para o assistido e a família</option>
+    <option value="pedido-progressao.md">Pedido de progressão de regime</option>
+    <option value="pedido-livramento.md">Pedido de livramento condicional</option>
+    <option value="pedido-remicao.md">Pedido de reconhecimento de remição</option>
+    <option value="impugnacao-calculo.md">Impugnação de cálculo</option>
+  </select>
+
+  <button id="gerar" type="button">Gerar documento</button>
+  <button id="copiar" type="button">Copiar texto</button>
+  <button id="baixar" type="button">Baixar .docx</button>
+  <button id="imprimir" type="button">Imprimir</button>
+  <p id="mensagem" role="status" aria-live="polite"></p>
+
+  <label for="resultado">Documento editável</label>
+  <textarea id="resultado" spellcheck="true" aria-describedby="ajuda"></textarea>
+  <p id="ajuda">Campos entre {{chaves}} que não vierem do cálculo permanecem no texto para serem preenchidos e revisados.</p>
+
+  <script src="gerador.js"></script>
+  <script src="pagina.js"></script>
+</body>
+</html>

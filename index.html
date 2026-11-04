@@ -1,0 +1,479 @@
+<!doctype html>
+<html lang="pt-BR" data-calculadora="execucao">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#4C9A2A">
+  <meta name="description" content="Calculadora de Execução Penal da Defensoria Pública do Estado de São Paulo.">
+  <title>Calculadora de Execução Penal</title>
+  <link rel="icon" href="icons/icon32.png">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="stylesheet" href="calc.css">
+  <link rel="stylesheet" href="compartilhado.css">
+  <link rel="stylesheet" href="execucao.css">
+  <script src="tema.js"></script>
+  <script src="catalogo-tipos.js" defer></script>
+  <script src="projecao-ui.js" defer></script>
+  <script src="regras.js" defer></script>
+  <script src="datas.js" defer></script>
+  <script src="engine.js" defer></script>
+  <script src="copilot.js" defer></script>
+  <script src="explicador.js" defer></script>
+  <script src="antecedentes.js" defer></script>
+  <script src="compartilhado.js" defer></script>
+  <script src="ui.js" defer></script>
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <div class="tela">
+    <header class="topo">
+      <div class="marca">
+        <img class="logo-topo" src="icons/logo-dpesp.png" alt="Defensoria Pública do Estado de São Paulo">
+        <div class="marca-texto">
+          <h1>Calculadora de Execução Penal</h1>
+        </div>
+      </div>
+      <div class="topo-dir">
+        <span class="sub aviso-pwa" id="avisoPwa" role="status">Instalável e disponível offline.</span>
+        <button type="button" class="q-btn-flat btn-tema" id="btnTema" title="Tema da tela: automático, claro ou escuro">
+          <svg class="ic" aria-hidden="true"><use href="#i-tema"/></svg>
+          <span id="rotuloTema">Automático</span>
+        </button>
+        <button class="q-btn q-btn-outline novo-calculo" id="novo-calculo" type="button">Novo cálculo</button>
+      </div>
+    </header>
+
+    <nav class="nav-calc" aria-label="Calculadoras">
+      <a href="#condenacoes" data-calc="execucao">Execução</a>
+      <a href="#projecao">Projeção</a>
+      <a href="#conferir-atestado">Conferir atestado</a>
+      <a href="importar.html">Importar documentos</a>
+      <a href="radar.html" data-calc="radar">Radar</a>
+      <a href="ferramentas.html">Ferramentas</a>
+    </nav>
+
+  <main class="pagina">
+    <details class="painel recolhivel assinatura">
+      <summary>
+        <span class="painel-titulo sem-margem">Dados de quem assina</span>
+        <span class="sub">Unidade, cidade e autor</span>
+      </summary>
+      <div class="linha-campos campos-assinatura">
+        <label class="q-campo">
+          <span class="q-rotulo">Unidade</span>
+          <input type="text" name="unidade" data-assinatura autocomplete="organization">
+        </label>
+        <label class="q-campo">
+          <span class="q-rotulo">Cidade</span>
+          <input type="text" name="cidade" data-assinatura autocomplete="address-level2">
+        </label>
+        <label class="q-campo q-campo-largo">
+          <span class="q-rotulo">Autor</span>
+          <input type="text" name="autor" data-assinatura autocomplete="name">
+        </label>
+      </div>
+      <p class="sub aviso-local" id="avisoAssinatura" role="status">Esses dados ficam salvos somente neste navegador.</p>
+    </details>
+
+    <p class="aviso-pendente" role="status">
+      <strong>Atenção:</strong> algumas regras ainda estão pendentes de validação.
+      Confira os avisos do resultado e as regras
+      <a href="REGRAS-DE-NEGOCIO.md">E31</a> e
+      <a href="REGRAS-DE-NEGOCIO.md">E42</a> antes de usar as datas.
+    </p>
+
+    <section class="painel" id="projecao" aria-labelledby="titulo-projecao">
+      <div class="cartao-cab">
+        <div>
+          <p class="rotulo-secao">Projeção</p>
+          <h2 id="titulo-projecao">Catálogo de tipos penais</h2>
+        </div>
+      </div>
+      <p class="aviso-pendente" role="status">
+        <strong>Atenção:</strong> penas e vigências do catálogo estão “a conferir”.
+        Confirme a fonte e a data de vigência antes de usar. A lei posterior mais benéfica pode retroagir; essa hipótese não é calculada aqui (P10).
+      </p>
+      <div class="linha-campos">
+        <label class="q-campo q-campo-medio">
+          <span class="q-rotulo">Buscar por nome, artigo ou sinônimo</span>
+          <input id="busca-tipo-penal" type="search" autocomplete="off" placeholder="Ex.: 157, roubo ou assalto">
+        </label>
+        <label class="q-campo q-campo-curto">
+          <span class="q-rotulo">Data do fato</span>
+          <input id="data-fato-catalogo" type="date">
+        </label>
+      </div>
+      <p class="nota" id="aviso-catalogo" role="status" aria-live="polite">Informe a busca e a data do fato.</p>
+      <div id="resultados-catalogo" aria-live="polite"></div>
+    </section>
+
+    <form id="form-calculo" novalidate>
+      <section class="painel" aria-labelledby="titulo-condenacoes">
+        <div class="cartao-cab">
+          <div>
+            <p class="rotulo-secao">Dados da execução</p>
+            <h2 id="titulo-condenacoes">Condenações</h2>
+          </div>
+          <button class="q-btn q-btn-outline" type="button" data-adicionar="condenacoes">Adicionar condenação</button>
+        </div>
+        <div id="condenacoes" class="lista-itens"></div>
+      </section>
+
+      <section class="painel" aria-labelledby="titulo-prisao">
+        <div class="cartao-cab">
+          <div>
+            <p class="rotulo-secao">Períodos de cumprimento</p>
+            <h2 id="titulo-prisao">Prisão e interrupções</h2>
+          </div>
+          <button class="q-btn q-btn-outline" type="button" data-adicionar="prisoes">Adicionar prisão</button>
+        </div>
+        <div id="prisoes" class="lista-itens"></div>
+        <label class="q-campo regime-atual">
+          <span class="q-rotulo">Regime atual</span>
+          <select id="regime-atual">
+            <option value="fechado">Fechado</option>
+            <option value="semiaberto">Semiaberto</option>
+            <option value="aberto">Aberto</option>
+          </select>
+        </label>
+        <div class="cartao-cab cartao-subcab">
+          <h3>Interrupções</h3>
+          <button class="q-btn q-btn-outline" type="button" data-adicionar="interrupcoes">Adicionar interrupção</button>
+        </div>
+        <div id="interrupcoes" class="lista-itens"></div>
+      </section>
+
+      <section class="painel" aria-labelledby="titulo-detracao">
+        <div class="cartao-cab">
+          <div>
+            <p class="rotulo-secao">Abatimentos</p>
+            <h2 id="titulo-detracao">Detração</h2>
+          </div>
+          <button class="q-btn q-btn-outline" type="button" data-adicionar="detracoes">Adicionar período</button>
+        </div>
+        <div id="detracoes" class="lista-itens"></div>
+      </section>
+
+      <section class="painel" aria-labelledby="titulo-remicao">
+        <div class="cartao-cab">
+          <div>
+            <p class="rotulo-secao">Abatimentos</p>
+            <h2 id="titulo-remicao">Remição</h2>
+          </div>
+          <button class="q-btn q-btn-outline" type="button" data-adicionar="remicoes">Adicionar remição</button>
+        </div>
+        <div id="remicoes" class="lista-itens"></div>
+      </section>
+
+      <section class="painel" aria-labelledby="titulo-faltas">
+        <div class="cartao-cab">
+          <div>
+            <p class="rotulo-secao">Eventos da execução</p>
+            <h2 id="titulo-faltas">Faltas</h2>
+          </div>
+          <button class="q-btn q-btn-outline" type="button" data-adicionar="faltasGraves">Adicionar falta</button>
+        </div>
+        <div id="faltasGraves" class="lista-itens"></div>
+      </section>
+
+      <section class="painel" aria-labelledby="titulo-progressoes">
+        <div class="cartao-cab">
+          <div>
+            <p class="rotulo-secao">Eventos da execução</p>
+            <h2 id="titulo-progressoes">Progressões já concedidas</h2>
+          </div>
+          <button class="q-btn q-btn-outline" type="button" data-adicionar="progressoes">Adicionar progressão</button>
+        </div>
+        <div id="progressoes" class="lista-itens"></div>
+      </section>
+
+      <section class="painel" aria-labelledby="titulo-dados-atestado">
+        <div class="cartao-cab">
+          <div>
+            <p class="rotulo-secao">Dados do SEEU</p>
+            <h2 id="titulo-dados-atestado">Conferir atestado</h2>
+          </div>
+        </div>
+        <p>Informe as datas previstas e os totais em dias que constam no atestado. Os campos são opcionais.</p>
+        <div class="grade-campos">
+          <label class="q-campo">
+            <span class="q-rotulo">Progressão prevista</span>
+            <input id="atestado-progressao" type="text" inputmode="numeric" autocomplete="off" placeholder="DD/MM/AAAA">
+            <small class="erro-campo" aria-live="polite"></small>
+          </label>
+          <label class="q-campo">
+            <span class="q-rotulo">Livramento previsto</span>
+            <input id="atestado-livramento" type="text" inputmode="numeric" autocomplete="off" placeholder="DD/MM/AAAA">
+            <small class="erro-campo" aria-live="polite"></small>
+          </label>
+          <label class="q-campo">
+            <span class="q-rotulo">Término previsto</span>
+            <input id="atestado-termino" type="text" inputmode="numeric" autocomplete="off" placeholder="DD/MM/AAAA">
+            <small class="erro-campo" aria-live="polite"></small>
+          </label>
+          <label class="q-campo">
+            <span class="q-rotulo">Pena total (dias)</span>
+            <input id="atestado-penaTotalDias" type="number" min="0" step="1" inputmode="numeric">
+            <small class="erro-campo" aria-live="polite"></small>
+          </label>
+          <label class="q-campo">
+            <span class="q-rotulo">Pena cumprida (dias)</span>
+            <input id="atestado-penaCumpridaDias" type="number" min="0" step="1" inputmode="numeric">
+            <small class="erro-campo" aria-live="polite"></small>
+          </label>
+          <label class="q-campo">
+            <span class="q-rotulo">Detração (dias)</span>
+            <input id="atestado-detracaoDias" type="number" min="0" step="1" inputmode="numeric">
+            <small class="erro-campo" aria-live="polite"></small>
+          </label>
+          <label class="q-campo">
+            <span class="q-rotulo">Remição (dias)</span>
+            <input id="atestado-remicaoDias" type="number" min="0" step="1" inputmode="numeric">
+            <small class="erro-campo" aria-live="polite"></small>
+          </label>
+          <label class="q-campo q-campo-largo">
+            <span class="q-rotulo">Origem do atestado</span>
+            <input id="atestado-origem" type="text" placeholder="Ex.: Atestado SEEU, seq. 120">
+          </label>
+        </div>
+        <details class="importar-atestado">
+          <summary>Importar dados do Copilot</summary>
+          <label class="q-campo" for="resposta-copilot-atestado">
+            <span class="q-rotulo">Resposta completa do Copilot</span>
+            <textarea id="resposta-copilot-atestado" rows="6"></textarea>
+          </label>
+          <button class="q-btn q-btn-outline" id="importar-atestado-copilot" type="button">Validar e preencher atestado</button>
+          <p id="status-importacao-atestado" class="sub" role="status" aria-live="polite"></p>
+        </details>
+      </section>
+
+      <details class="painel">
+        <summary><strong>E37 · Progressão especial da gestante, mãe ou responsável</strong></summary>
+        <p class="ajuda">LEP art. 112, §§ 3º e 4º. Confirme cada requisito para calcular 1/8 da pena no regime anterior. Confira todas as condenações. Pendente de validação.</p>
+        <label class="campo-checkbox"><input type="checkbox" id="e37-solicitada"> Avaliar a progressão especial</label>
+        <div class="grade-campos" id="requisitos-e37">
+          <label class="campo-checkbox"><input type="checkbox" data-e37="gestanteMaeOuResponsavel"> Mulher gestante, mãe ou responsável por criança ou pessoa com deficiência</label>
+          <label class="campo-checkbox"><input type="checkbox" data-e37="semViolenciaOuGraveAmeaca"> Não cometeu crime com violência ou grave ameaça a pessoa</label>
+          <label class="campo-checkbox"><input type="checkbox" data-e37="naoContraFilhoOuDependente"> Não cometeu o crime contra filho ou dependente</label>
+          <label class="campo-checkbox"><input type="checkbox" data-e37="primaria"> É primária</label>
+          <label class="campo-checkbox"><input type="checkbox" data-e37="bomComportamento"> Tem bom comportamento carcerário comprovado pelo diretor do estabelecimento</label>
+          <label class="campo-checkbox"><input type="checkbox" data-e37="naoIntegrouOrganizacaoCriminosa"> Não integrou organização criminosa</label>
+          <label class="q-campo"><span class="q-rotulo">Cometeu novo crime doloso que revoga o benefício?</span><select data-e37="novoCrimeDoloso"><option value="">Não informado</option><option value="false">Não</option><option value="true">Sim</option></select></label>
+          <label class="q-campo"><span class="q-rotulo">Cometeu falta grave que revoga o benefício?</span><select data-e37="faltaGrave"><option value="">Não informado</option><option value="false">Não</option><option value="true">Sim</option></select></label>
+        </div>
+        <p class="ajuda">Os fatos revogadores são conferidos pelo usuário até a data do cálculo. Não confunda falta anterior ao benefício com falta que o revoga; registre também as faltas na seção Faltas para recalcular a data-base e a remição.</p>
+      </details>
+      <details class="painel opcoes-avancadas" id="opcoes-avancadas">
+        <summary>
+          <span>
+            <span class="rotulo-secao">Configuração</span>
+            <strong>Opções avançadas</strong>
+          </span>
+          <span class="selo-uso" id="selo-uso" hidden>Em uso</span>
+        </summary>
+        <div class="grade-campos">
+          <label class="q-campo">
+            <span class="q-rotulo">D1 · Conversão da pena em dias</span>
+            <select id="convencao-dias">
+              <option value="calendario">Calendário (provisório)</option>
+              <option value="365">365 dias por ano</option>
+              <option value="360">360 dias por ano e 30 por mês</option>
+            </select>
+          </label>
+          <label class="q-campo">
+            <span class="q-rotulo">D2 · Um dia a menos na data do benefício</span>
+            <span class="campo-checkbox"><input id="menos-um" type="checkbox"> Aplicar</span>
+          </label>
+          <label class="q-campo">
+            <span class="q-rotulo">D3 · Arredondamento da fração de dia</span>
+            <select id="arredondamento">
+              <option value="cima">Para cima (provisório)</option>
+              <option value="baixo">Para baixo</option>
+            </select>
+          </label>
+        </div>
+      </details>
+
+      <div class="acoes-formulario">
+        <label class="q-campo campo-data-calculo">
+          <span class="q-rotulo">Data do cálculo</span>
+          <input id="data-calculo" type="text" inputmode="numeric" autocomplete="off" placeholder="DD/MM/AAAA" required>
+          <small class="ajuda">Use DD/MM/AAAA ou DDMMAAAA.</small>
+          <small class="erro-campo" aria-live="polite"></small>
+        </label>
+        <button class="q-btn" type="submit">Calcular</button>
+      </div>
+    </form>
+
+    <section class="painel resultado" id="resultado" aria-labelledby="titulo-resultado" aria-live="polite" hidden>
+      <div class="cartao-cab">
+        <div>
+          <p class="rotulo-secao">Resultado a conferir</p>
+          <h2 id="titulo-resultado">Resumo do cálculo</h2>
+        </div>
+        <button class="q-btn q-btn-outline" id="imprimir-resultado" type="button">Imprimir / salvar PDF</button>
+      </div>
+      <p class="status-motor" id="status-motor"></p>
+      <div class="avisos-resultado" id="avisos-resultado"></div>
+      <div class="quadro-datas" id="quadro-datas"></div>
+      <div class="quadro-saldos" id="quadro-saldos"></div>
+      <section class="resultado-secao cenarios-teses" id="cenarios-teses" aria-labelledby="titulo-cenarios" hidden>
+        <h3 id="titulo-cenarios">Teses controvertidas</h3>
+        <p class="nota">Cenários lado a lado; a tese defensiva vem primeiro. Confira os fundamentos e o tema pendente antes de usar as datas.</p>
+        <div id="conteudo-cenarios"></div>
+      </section>
+      <section class="resultado-secao" aria-labelledby="titulo-linha-tempo">
+        <h3 id="titulo-linha-tempo">Linha do tempo</h3>
+        <ol class="linha-tempo" id="linha-tempo"></ol>
+      </section>
+      <details class="resultado-secao memoria">
+        <summary><h3>Memória de cálculo</h3></summary>
+        <div id="memoria-calculo"></div>
+      </details>
+    </section>
+    <section class="painel" id="conferir-atestado" aria-labelledby="titulo-resultado-atestado" aria-live="polite">
+      <div class="cartao-cab"><h2 class="painel-titulo sem-margem" id="titulo-resultado-atestado">SEEU × calculadora</h2></div>
+      <p id="status-conferencia-atestado" class="sub">Preencha os dados do atestado para comparar datas e totais.</p>
+      <div class="tabela-rolagem" id="tabela-conferencia-atestado" hidden></div>
+      <div id="textos-impugnacao-atestado"></div>
+    </section>
+  </main>
+
+  <template id="modelo-condenacoes">
+    <fieldset class="item-card">
+      <legend>Condenação</legend>
+      <div class="grade-campos">
+        <label class="q-campo campo-data">
+          <span class="q-rotulo">Data do fato</span>
+          <input type="text" data-campo="dataFato" inputmode="numeric" autocomplete="off" placeholder="DD/MM/AAAA" required>
+          <small class="ajuda">Use DD/MM/AAAA ou DDMMAAAA.</small><small class="erro-campo" aria-live="polite"></small>
+        </label>
+        <label class="q-campo"><span class="q-rotulo">Pena · anos</span><input type="number" data-campo="pena.anos" min="0" step="1" value="0" inputmode="numeric"><small class="erro-campo" aria-live="polite"></small></label>
+        <label class="q-campo"><span class="q-rotulo">Pena · meses</span><input type="number" data-campo="pena.meses" min="0" step="1" value="0" inputmode="numeric"><small class="erro-campo" aria-live="polite"></small></label>
+        <label class="q-campo"><span class="q-rotulo">Pena · dias</span><input type="number" data-campo="pena.dias" min="0" step="1" value="0" inputmode="numeric"><small class="erro-campo" aria-live="polite"></small></label>
+        <label class="q-campo">
+          <span class="q-rotulo">Natureza do crime</span>
+          <select data-campo="natureza">
+            <option value="comum">Comum, sem violência</option>
+            <option value="violencia">Com violência ou grave ameaça</option>
+            <option value="hediondo">Hediondo ou equiparado</option>
+            <option value="hediondo_morte">Hediondo com resultado morte</option>
+            <option value="trafico_privilegiado">Tráfico privilegiado</option>
+            <option value="feminicidio">Feminicídio</option>
+            <option value="comando_orcrim">Comando de organização criminosa</option>
+            <option value="milicia">Milícia</option>
+          </select>
+        </label>
+        <label class="q-campo">
+          <span class="q-rotulo">Reincidência</span>
+          <select data-campo="reincidencia">
+            <option value="primario">Primário</option>
+            <option value="generico">Reincidente genérico</option>
+            <option value="especifico">Reincidente específico</option>
+          </select>
+        </label>
+        <label class="q-campo">
+          <span class="q-rotulo">Regime inicial</span>
+          <select data-campo="regimeInicial">
+            <option value="fechado">Fechado</option>
+            <option value="semiaberto">Semiaberto</option>
+            <option value="aberto">Aberto</option>
+          </select>
+        </label>
+        <label class="campo-checkbox"><input type="checkbox" data-campo="bonsAntecedentes" checked> Bons antecedentes</label>
+        <label class="campo-checkbox"><input type="checkbox" data-campo="equiparado"> Equiparado a hediondo</label>
+      </div>
+      <button class="q-btn q-btn-flat remover-item" type="button">Remover condenação</button>
+    </fieldset>
+  </template>
+
+  <template id="modelo-prisoes">
+    <fieldset class="item-card">
+      <legend>Período de prisão</legend>
+      <div class="grade-campos">
+        <label class="q-campo campo-data"><span class="q-rotulo">Início</span><input type="text" data-campo="inicio" inputmode="numeric" autocomplete="off" placeholder="DD/MM/AAAA"><small class="ajuda">Use DD/MM/AAAA ou DDMMAAAA.</small><small class="erro-campo" aria-live="polite"></small></label>
+        <label class="q-campo campo-data"><span class="q-rotulo">Fim (deixe vazio se continua)</span><input type="text" data-campo="fim" inputmode="numeric" autocomplete="off" placeholder="DD/MM/AAAA"><small class="ajuda">Use DD/MM/AAAA ou DDMMAAAA.</small><small class="erro-campo" aria-live="polite"></small></label>
+        <label class="q-campo"><span class="q-rotulo">Tipo</span><select data-campo="tipo"><option value="definitiva">Definitiva</option><option value="provisoria">Provisória</option></select></label>
+      </div>
+      <button class="q-btn q-btn-flat remover-item" type="button">Remover prisão</button>
+    </fieldset>
+  </template>
+
+  <template id="modelo-interrupcoes">
+    <fieldset class="item-card">
+      <legend>Interrupção</legend>
+      <div class="grade-campos">
+        <label class="q-campo campo-data"><span class="q-rotulo">Início</span><input type="text" data-campo="inicio" inputmode="numeric" autocomplete="off" placeholder="DD/MM/AAAA"><small class="ajuda">Use DD/MM/AAAA ou DDMMAAAA.</small><small class="erro-campo" aria-live="polite"></small></label>
+        <label class="q-campo campo-data"><span class="q-rotulo">Fim</span><input type="text" data-campo="fim" inputmode="numeric" autocomplete="off" placeholder="DD/MM/AAAA"><small class="ajuda">Use DD/MM/AAAA ou DDMMAAAA.</small><small class="erro-campo" aria-live="polite"></small></label>
+        <label class="q-campo"><span class="q-rotulo">Motivo</span><select data-campo="motivo"><option value="fuga">Fuga</option><option value="outro">Outro</option></select></label>
+      </div>
+      <button class="q-btn q-btn-flat remover-item" type="button">Remover interrupção</button>
+    </fieldset>
+  </template>
+
+  <template id="modelo-detracoes">
+    <fieldset class="item-card">
+      <legend>Período de detração</legend>
+      <div class="grade-campos">
+        <label class="q-campo campo-data"><span class="q-rotulo">Início</span><input type="text" data-campo="inicio" inputmode="numeric" autocomplete="off" placeholder="DD/MM/AAAA"><small class="ajuda">Use DD/MM/AAAA ou DDMMAAAA.</small><small class="erro-campo" aria-live="polite"></small></label>
+        <label class="q-campo campo-data"><span class="q-rotulo">Fim</span><input type="text" data-campo="fim" inputmode="numeric" autocomplete="off" placeholder="DD/MM/AAAA"><small class="ajuda">Use DD/MM/AAAA ou DDMMAAAA.</small><small class="erro-campo" aria-live="polite"></small></label>
+      </div>
+      <button class="q-btn q-btn-flat remover-item" type="button">Remover período</button>
+    </fieldset>
+  </template>
+
+  <template id="modelo-remicoes">
+    <fieldset class="item-card">
+      <legend>Remição</legend>
+      <div class="grade-campos">
+        <label class="q-campo"><span class="q-rotulo">Dias remidos</span><input type="number" data-campo="dias" min="0" step="1" inputmode="numeric"><small class="erro-campo" aria-live="polite"></small></label>
+        <label class="q-campo campo-data"><span class="q-rotulo">Data da homologação</span><input type="text" data-campo="dataHomologacao" inputmode="numeric" autocomplete="off" placeholder="DD/MM/AAAA"><small class="ajuda">Use DD/MM/AAAA ou DDMMAAAA.</small><small class="erro-campo" aria-live="polite"></small></label>
+        <label class="campo-checkbox"><input type="checkbox" data-campo="homologada"> Homologada</label>
+      </div>
+      <button class="q-btn q-btn-flat remover-item" type="button">Remover remição</button>
+    </fieldset>
+  </template>
+
+  <template id="modelo-faltasGraves">
+    <fieldset class="item-card">
+      <legend>Falta</legend>
+      <div class="grade-campos">
+        <label class="q-campo campo-data"><span class="q-rotulo">Data</span><input type="text" data-campo="data" inputmode="numeric" autocomplete="off" placeholder="DD/MM/AAAA"><small class="ajuda">Use DD/MM/AAAA ou DDMMAAAA.</small><small class="erro-campo" aria-live="polite"></small></label>
+        <label class="q-campo"><span class="q-rotulo">Tipo</span><select data-campo="tipo"><option value="outra">Outra</option><option value="fuga">Fuga</option></select></label>
+        <label class="q-campo campo-data"><span class="q-rotulo">Data da recaptura (se fuga)</span><input type="text" data-campo="dataRecaptura" inputmode="numeric" autocomplete="off" placeholder="DD/MM/AAAA"><small class="ajuda">Use DD/MM/AAAA ou DDMMAAAA.</small><small class="erro-campo" aria-live="polite"></small></label>
+        <label class="q-campo"><span class="q-rotulo">Dias perdidos de remição</span><input type="number" data-campo="diasPerdidosRemicao" min="0" step="1" inputmode="numeric"><small class="erro-campo" aria-live="polite"></small></label>
+        <label class="campo-checkbox"><input type="checkbox" data-campo="homologada"> Homologada</label>
+      </div>
+      <button class="q-btn q-btn-flat remover-item" type="button">Remover falta</button>
+    </fieldset>
+  </template>
+
+  <template id="modelo-progressoes">
+    <fieldset class="item-card">
+      <legend>Progressão concedida</legend>
+      <div class="grade-campos">
+        <label class="q-campo campo-data"><span class="q-rotulo">Data</span><input type="text" data-campo="data" inputmode="numeric" autocomplete="off" placeholder="DD/MM/AAAA"><small class="ajuda">Use DD/MM/AAAA ou DDMMAAAA.</small><small class="erro-campo" aria-live="polite"></small></label>
+        <label class="q-campo"><span class="q-rotulo">Para o regime</span><select data-campo="para"><option value="semiaberto">Semiaberto</option><option value="aberto">Aberto</option></select></label>
+      </div>
+      <button class="q-btn q-btn-flat remover-item" type="button">Remover progressão</button>
+    </fieldset>
+  </template>
+    <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+      <symbol id="i-tema" viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm0 18V4a8 8 0 0 1 0 16z"/></symbol>
+    </svg>
+  </div>
+  <section class="impressao" id="impressao" hidden>
+    <div class="doc-titulo">
+      <h1>Demonstrativo de execução penal</h1>
+      <p id="impressao-data"></p>
+    </div>
+    <h2>Resumo do cálculo</h2>
+    <table class="dados resumo-doc"><tbody id="impressao-resumo"></tbody></table>
+    <div id="impressao-avisos"></div>
+    <h2>Memória de cálculo</h2>
+    <div id="impressao-memoria"></div>
+    <div id="impressao-cenarios"></div>
+    <p class="nota-final">Resultado a conferir. As teses e datas dependem da conferência dos dados, dos documentos e dos precedentes indicados.</p>
+  </section>
+</body>
+</html>

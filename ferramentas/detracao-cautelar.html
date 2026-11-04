@@ -1,0 +1,162 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#4C9A2A">
+  <title>Detração cautelar — Calculadora de Execução Penal</title>
+  <style>
+    :root {
+      color-scheme: light dark;
+      --primaria: #4C9A2A;
+      --primaria-escura: #3F8223;
+      --alerta: #E9A820;
+      --erro: #C10015;
+      --fundo: #fff;
+      --texto: #202820;
+      --borda: #d7dfd8;
+      --raio: 10px;
+      font-family: system-ui, sans-serif;
+      color: var(--texto);
+      background: var(--fundo);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      max-width: 46rem;
+      margin: 0 auto;
+      padding: 1.5rem 1rem 3rem;
+      line-height: 1.5;
+    }
+
+    h1 { font-size: 1.6rem; line-height: 1.2; }
+
+    .painel {
+      margin-block: 1rem;
+      padding: 1.25rem;
+      border: 1px solid var(--borda);
+      border-radius: var(--raio);
+    }
+
+    label { display: block; margin-top: 1rem; font-weight: 600; }
+
+    input {
+      display: block;
+      width: 100%;
+      max-width: 14rem;
+      margin-top: .35rem;
+      padding: .6rem;
+      border: 1px solid var(--borda);
+      border-radius: 6px;
+      font: inherit;
+    }
+
+    button {
+      margin-top: 1.25rem;
+      padding: .65rem 1rem;
+      border: 0;
+      border-radius: 6px;
+      color: #fff;
+      background: var(--primaria-escura);
+      font: inherit;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .aviso {
+      padding: .75rem 1rem;
+      border-left: 4px solid var(--alerta);
+      background: color-mix(in srgb, var(--alerta) 12%, var(--fundo));
+    }
+
+    #resultado:empty { display: none; }
+    #resultado[role="alert"] { border-color: var(--erro); }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --primaria: #72C850;
+        --primaria-escura: #72C850;
+        --fundo: #151A17;
+        --texto: #f2f5f2;
+        --borda: #465048;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>Detração de recolhimento domiciliar</h1>
+    <p>Informe as horas comprovadas de recolhimento obrigatório noturno e em dias de folga.</p>
+
+    <p class="aviso">
+      O Tema 1454 do STF (RE 1.598.180) teve repercussão geral reconhecida e ainda aguarda
+      decisão de mérito. Este cálculo segue provisoriamente o Tema 1155 do STJ.
+    </p>
+
+    <form id="formulario" class="painel">
+      <label for="horas-noturnas">Horas de recolhimento noturno</label>
+      <input id="horas-noturnas" name="horasNoturnas" type="number" min="0" step="1" value="0" required>
+
+      <label for="horas-folga">Horas de recolhimento em dias de folga</label>
+      <input id="horas-folga" name="horasFolga" type="number" min="0" step="1" value="0" required>
+
+      <p>Some apenas horas comprovadas e não conte duas vezes períodos sobrepostos.</p>
+      <button type="submit">Calcular detração</button>
+    </form>
+
+    <section id="resultado" class="painel" aria-live="polite"></section>
+
+    <p class="aviso">
+      Pelo Tema 1155/STJ, cada 24 horas completas equivalem a um dia de detração; eventual
+      período restante inferior a 24 horas é desprezado. O monitoramento eletrônico não é
+      requisito para esse critério.
+    </p>
+    <p>Ferramenta de apoio. A análise do caso concreto cabe à defesa e ao juízo.</p>
+  </main>
+
+  <script src="detracao-cautelar.js"></script>
+  <script>
+    "use strict";
+
+    const formulario = document.getElementById("formulario");
+    const resultado = document.getElementById("resultado");
+
+    formulario.addEventListener("submit", (evento) => {
+      evento.preventDefault();
+      const calculo = CalculadoraDetracaoCautelar.calcularDetracaoCautelar({
+        horasNoturnas: formulario.elements.horasNoturnas.valueAsNumber,
+        horasFolga: formulario.elements.horasFolga.valueAsNumber
+      });
+
+      resultado.replaceChildren();
+      if (calculo.erros) {
+        resultado.setAttribute("role", "alert");
+        const lista = document.createElement("ul");
+        for (const erro of calculo.erros) {
+          const item = document.createElement("li");
+          item.textContent = erro.mensagem;
+          lista.append(item);
+        }
+        resultado.append(lista);
+        return;
+      }
+
+      resultado.setAttribute("role", "status");
+      const dias = document.createElement("p");
+      dias.textContent = `${calculo.dias} ${calculo.dias === 1 ? "dia" : "dias"} de detração.`;
+      const horas = document.createElement("p");
+      const horasSomadas = `${calculo.horasTotais} ${
+        calculo.horasTotais === 1 ? "hora somada" : "horas somadas"
+      }`;
+      const horasRestantes = `${calculo.horasRemanescentes} ${
+        calculo.horasRemanescentes === 1
+          ? "hora restante não gera outro dia"
+          : "horas restantes não geram outro dia"
+      }`;
+      horas.textContent = `${horasSomadas}; ${horasRestantes}.`;
+      resultado.append(dias, horas);
+    });
+  </script>
+</body>
+</html>

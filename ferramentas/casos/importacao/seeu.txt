@@ -1,0 +1,31 @@
+DOCUMENTO SINTÉTICO — NÃO É ATESTADO REAL
+SEEU — Situação carcerária
+Menu Início Consulta
+Condenação 1
+Data do fato
+  10 / 03 / 2021
+Pena imposta: 5 anos, 4 meses e 0 dias
+Natureza: com violência ou grave ameaça
+Equiparado: não
+Reincidência: primário
+Bons antecedentes: sim
+Regime inicial: fechado
+Condenação 2
+Data do delito: 20/05/2022
+Pena: 2a 0m 0d
+Natureza: comum
+Equiparado: não
+Reincidência: reincidente genérico
+Bons antecedentes: não
+Regime inicial: semiaberto
+Data de início do cumprimento: 10/01/2026
+Tipo de prisão: definitiva
+Regime atual: fechado
+Pena total: 3.000 dias
+Pena cumprida: 200 dias
+Total de remição: 30 dias
+Detração: 122 dias
+Data de emissão: 01/10/2026
+Data prevista para progressão de regime: 11/09/2027
+Livramento condicional: 02/01/2028
+Término da pena: 08/12/2033

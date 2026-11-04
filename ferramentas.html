@@ -1,0 +1,208 @@
+<!doctype html>
+<html lang="pt-BR" data-calculadora="ferramentas">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#4c9a2a">
+  <title>Ferramentas rápidas · Calculadora de Execução Penal</title>
+  <link rel="stylesheet" href="ferramentas.css">
+  <link rel="stylesheet" href="calc.css">
+  <link rel="stylesheet" href="compartilhado.css">
+  <script src="tema.js"></script>
+  <script src="compartilhado.js" defer></script>
+  <script src="ferramentas-rapidas.js" defer></script>
+  <script src="ferramentas-ui.js" defer></script>
+</head>
+<body>
+  <header class="topo">
+    <div class="marca">
+      <img class="logo-topo" src="icons/logo-dpesp.png" alt="Defensoria Pública do Estado de São Paulo">
+      <div class="marca-texto"><h1>Calculadora de Execução Penal</h1></div>
+    </div>
+    <div class="topo-dir">
+      <button type="button" class="q-btn-flat btn-tema" id="btnTema" title="Tema da tela: automático, claro ou escuro">
+        <span id="rotuloTema">Automático</span>
+      </button>
+    </div>
+  </header>
+  <nav class="nav-calc" aria-label="Calculadoras">
+    <a href="index.html#condenacoes" data-calc="execucao">Execução</a>
+    <a href="index.html#projecao" aria-disabled="true" tabindex="-1">Projeção</a>
+    <a href="index.html#conferir-atestado">Conferir atestado</a>
+    <a href="importar.html" data-calc="importar">Importar documentos</a>
+    <a href="radar.html" data-calc="radar">Radar</a>
+    <a href="ferramentas.html" data-calc="ferramentas">Ferramentas</a>
+  </nav>
+  <main class="pagina">
+    <div class="pagina-titulo">
+      <p class="sub">Cálculos auxiliares</p>
+      <h1>Ferramentas rápidas</h1>
+      <p>Converta penas, confira frações e faça contas com datas.</p>
+    </div>
+    <p class="nota">Resultados de apoio. As frações são cálculos matemáticos e não indicam, por si só, qual regra se aplica ao caso.</p>
+    <p class="nota">D1 e D3 ainda estão pendentes de validação. Compare as três convenções; o arredondamento das frações para cima é provisório.</p>
+
+    <section class="painel" aria-labelledby="titulo-conversor">
+      <h2 id="titulo-conversor" class="rotulo-secao">Pena em dias</h2>
+      <p class="ajuda">Informe a pena e uma data inicial. No calendário, anos e meses são somados à data, limitando dias inexistentes ao último dia do mês.</p>
+      <form id="form-conversor" novalidate>
+        <div class="linha-campos">
+          <label class="q-campo q-campo-curto">
+            <span class="q-rotulo">Anos</span>
+            <input id="anos" type="number" min="0" step="1" value="0" inputmode="numeric">
+          </label>
+          <label class="q-campo q-campo-curto">
+            <span class="q-rotulo">Meses</span>
+            <input id="meses" type="number" min="0" step="1" value="0" inputmode="numeric">
+          </label>
+          <label class="q-campo q-campo-curto">
+            <span class="q-rotulo">Dias</span>
+            <input id="dias" type="number" min="0" step="1" value="0" inputmode="numeric">
+          </label>
+          <label class="q-campo q-campo-medio">
+            <span class="q-rotulo">Data inicial</span>
+            <input id="data-inicial" type="date" required>
+          </label>
+        </div>
+        <p id="erro-conversor" class="erro" role="alert" hidden></p>
+        <div class="cartao-acoes">
+          <button class="q-btn" type="submit">Converter pelas três convenções</button>
+        </div>
+      </form>
+      <div id="resultado-conversor" class="resultado-grid" aria-live="polite" hidden>
+        <div class="resultado-item"><span>Calendário</span><strong id="dias-calendario"></strong></div>
+        <div class="resultado-item"><span>365 dias por ano / 30 por mês</span><strong id="dias-365"></strong></div>
+        <div class="resultado-item"><span>360 dias por ano / 30 por mês</span><strong id="dias-360"></strong></div>
+        <button class="q-btn-outline copiar" type="button" data-copiar="conversor">Copiar resultados</button>
+      </div>
+    </section>
+
+    <section class="painel" aria-labelledby="titulo-inverso">
+      <h2 id="titulo-inverso" class="rotulo-secao">Dias em anos, meses e dias</h2>
+      <form id="form-inverso" novalidate>
+        <div class="linha-campos">
+          <label class="q-campo q-campo-curto">
+            <span class="q-rotulo">Total de dias</span>
+            <input id="total-dias" type="number" min="0" step="1" value="0" inputmode="numeric">
+          </label>
+          <label class="q-campo q-campo-medio">
+            <span class="q-rotulo">Convenção</span>
+            <select id="convencao-inversa">
+              <option value="calendario">Calendário</option>
+              <option value="365">365 dias por ano / 30 por mês</option>
+              <option value="360">360 dias por ano / 30 por mês</option>
+            </select>
+          </label>
+          <label class="q-campo q-campo-medio">
+            <span class="q-rotulo">Data inicial</span>
+            <input id="data-inicial-inversa" type="date">
+          </label>
+        </div>
+        <p id="erro-inverso" class="erro" role="alert" hidden></p>
+        <div class="cartao-acoes">
+          <button class="q-btn" type="submit">Converter em anos, meses e dias</button>
+        </div>
+      </form>
+      <div id="resultado-inverso" class="resultado-linha" aria-live="polite" hidden>
+        <strong id="pena-decomposta"></strong>
+        <button class="q-btn-outline copiar" type="button" data-copiar="inverso">Copiar resultado</button>
+      </div>
+    </section>
+
+    <section class="painel" aria-labelledby="titulo-fracoes">
+      <h2 id="titulo-fracoes" class="rotulo-secao">Frações da pena</h2>
+      <p class="ajuda">Mostra as frações registradas nas regras de progressão e livramento. O arredondamento para cima é provisório (D3).</p>
+      <form id="form-fracoes" novalidate>
+        <div class="linha-campos">
+          <label class="q-campo q-campo-curto">
+            <span class="q-rotulo">Anos</span>
+            <input id="fracao-anos" type="number" min="0" step="1" value="0" inputmode="numeric">
+          </label>
+          <label class="q-campo q-campo-curto">
+            <span class="q-rotulo">Meses</span>
+            <input id="fracao-meses" type="number" min="0" step="1" value="0" inputmode="numeric">
+          </label>
+          <label class="q-campo q-campo-curto">
+            <span class="q-rotulo">Dias</span>
+            <input id="fracao-dias" type="number" min="0" step="1" value="0" inputmode="numeric">
+          </label>
+          <label class="q-campo q-campo-medio">
+            <span class="q-rotulo">Data inicial</span>
+            <input id="data-inicial-fracoes" type="date" required>
+          </label>
+        </div>
+        <p id="erro-fracoes" class="erro" role="alert" hidden></p>
+        <div class="cartao-acoes">
+          <button class="q-btn" type="submit">Calcular todas as frações</button>
+        </div>
+      </form>
+      <div id="resultado-fracoes" hidden>
+        <div class="tabela-rolagem">
+          <table class="q-tabela">
+            <thead>
+              <tr><th scope="col">Fração</th><th scope="col">Calendário</th><th scope="col">365/30</th><th scope="col">360/30</th></tr>
+            </thead>
+            <tbody id="tabela-fracoes"></tbody>
+          </table>
+        </div>
+        <button class="q-btn-outline copiar" type="button" data-copiar="fracoes">Copiar tabela</button>
+      </div>
+    </section>
+
+    <section class="painel" aria-labelledby="titulo-soma-data">
+      <h2 id="titulo-soma-data" class="rotulo-secao">Somar ou subtrair dias de uma data</h2>
+      <form id="form-soma-data" novalidate>
+        <div class="linha-campos">
+          <label class="q-campo q-campo-medio">
+            <span class="q-rotulo">Data</span>
+            <input id="data-operacao" type="date" required>
+          </label>
+          <label class="q-campo q-campo-curto">
+            <span class="q-rotulo">Dias</span>
+            <input id="dias-operacao" type="number" min="0" step="1" value="0" inputmode="numeric">
+          </label>
+          <label class="q-campo q-campo-medio">
+            <span class="q-rotulo">Operação</span>
+            <select id="tipo-operacao">
+              <option value="somar">Somar</option>
+              <option value="subtrair">Subtrair</option>
+            </select>
+          </label>
+        </div>
+        <p id="erro-soma-data" class="erro" role="alert" hidden></p>
+        <div class="cartao-acoes"><button class="q-btn" type="submit">Calcular data</button></div>
+      </form>
+      <div id="resultado-soma-data" class="resultado-linha" aria-live="polite" hidden>
+        <strong id="data-calculada"></strong>
+        <button class="q-btn-outline copiar" type="button" data-copiar="soma-data">Copiar resultado</button>
+      </div>
+    </section>
+
+    <section class="painel" aria-labelledby="titulo-diferenca">
+      <h2 id="titulo-diferenca" class="rotulo-secao">Diferença entre datas</h2>
+      <form id="form-diferenca" novalidate>
+        <div class="linha-campos">
+          <label class="q-campo q-campo-medio">
+            <span class="q-rotulo">Data inicial</span>
+            <input id="data-inicio-diferenca" type="date" required>
+          </label>
+          <label class="q-campo q-campo-medio">
+            <span class="q-rotulo">Data final</span>
+            <input id="data-fim-diferenca" type="date" required>
+          </label>
+        </div>
+        <p id="erro-diferenca" class="erro" role="alert" hidden></p>
+        <div class="cartao-acoes"><button class="q-btn" type="submit">Calcular diferença</button></div>
+      </form>
+      <div id="resultado-diferenca" class="resultado-linha" aria-live="polite" hidden>
+        <strong id="dias-diferenca"></strong>
+        <button class="q-btn-outline copiar" type="button" data-copiar="diferenca">Copiar resultado</button>
+      </div>
+    </section>
+    <p id="status-copia" class="sr" role="status" aria-live="polite"></p>
+  </main>
+  <footer>
+    <p>Ferramenta de apoio. Confira a regra aplicável e os dados do caso antes de usar o resultado.</p>
+  </footer>
+</body>
+</html>
